@@ -1,0 +1,16 @@
+{"t": 1795664349.2728431, "dt_ms": 14.25, "op": "0x9102", "params": ["0x00010001"], "phase": "none", "out_len": 0, "out_head": "", "rc": "0x2001", "rc_name": "OK", "rparams": ["0x00010001"], "in_len": 0, "in_head": ""}
+{"t": 1795664349.2738433, "dt_ms": 1.41, "op": "0x9402", "params": ["0x02000021"], "phase": "read", "out_len": 0, "out_head": "", "rc": "0x2001", "rc_name": "OK", "rparams": [], "in_len": 12, "in_head": "2100000204000000ffffffff"}
+{"t": 1795664349.2979693, "dt_ms": 23.37, "op": "0x9403", "params": ["0x02000021"], "phase": "write", "out_len": 12, "out_head": "210000020400000090010000", "rc": "0x2001", "rc_name": "OK", "rparams": [], "in_len": 0, "in_head": ""}
+{"t": 1795664349.3028216, "kind": "event", "code": "0xC102", "params": ["0x02000010"]}
+{"t": 1795664349.3106318, "kind": "event", "code": "0xC102", "params": ["0x02000021"]}
+{"t": 1795664349.3199942, "kind": "event", "code": "0xC102", "params": ["0x02000060"]}
+{"t": 1795664349.3946927, "kind": "event", "code": "0xC107", "params": ["0x12000020"]}
+{"t": 1795664349.6010413, "dt_ms": 2.35, "op": "0x9402", "params": ["0x02000021"], "phase": "read", "out_len": 0, "out_head": "", "rc": "0x2001", "rc_name": "OK", "rparams": [], "in_len": 12, "in_head": "210000020400000090010000"}
+{"t": 1795664349.6287327, "dt_ms": 29.04, "op": "0x9403", "params": ["0x02000021"], "phase": "write", "out_len": 12, "out_head": "210000020400000039300000", "rc": "0x2001", "rc_name": "OK", "rparams": [], "in_len": 0, "in_head": ""}
+{"t": 1795664349.6566327, "dt_ms": 26.78, "op": "0x9403", "params": ["0x02000021"], "phase": "write", "out_len": 12, "out_head": "2100000204000000ffffffff", "rc": "0x2001", "rc_name": "OK", "rparams": [], "in_len": 0, "in_head": ""}
+{"t": 1795664349.6576705, "kind": "event", "code": "0xC102", "params": ["0x02000010"]}
+{"t": 1795664349.6594317, "kind": "event", "code": "0xC102", "params": ["0x02000021"]}
+{"t": 1795664349.6639915, "kind": "event", "code": "0xC102", "params": ["0x02000060"]}
+{"t": 1795664349.8640146, "kind": "event", "code": "0xC107", "params": ["0x12000020"]}
+{"t": 1795664349.9616668, "dt_ms": 4.9, "op": "0x9402", "params": ["0x02000021"], "phase": "read", "out_len": 0, "out_head": "", "rc": "0x2001", "rc_name": "OK", "rparams": [], "in_len": 12, "in_head": "2100000204000000ffffffff"}
+{"t": 1795664350.491029, "dt_ms": 27.56, "op": "0x9103", "params": ["0x00010001"], "phase": "none", "out_len": 0, "out_head": "", "rc": "0x2001", "rc_name": "OK", "rparams": [], "in_len": 0, "in_head": ""}
