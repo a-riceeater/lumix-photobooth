@@ -25,6 +25,11 @@ Times are local 2026-11-25. Log files: `captures/direct/<name>_<unixtime>.jsonl`
 | 19 | 0x9415 immediately after LV stop | InvalidParameter | Transient; OK idle / during LV / 1 s after stop (`probe_9415_1795664450`). |
 | 20 | LV sizes 640/960/1280 | all 30.1 fps | `test_lv_sizes_1795664460` |
 | 21 | Capture without 0x9102 | OK | `capture_no_9102_1795664491` |
+| — | **User note:** drive dial was on 2 s self-timer during 9–14 and 21 | timings re-measured | drive mode 0x02000081: 3 → 0 |
+| 22 | AF-S one-shot ×3 with LV + lock clear | OK; status 0x01000011 FFFE→0000→FFFF→(clear)FFFE | `test_autofocus_1795665159` |
+| 23 | SD capture, single drive | 3.16 s; with AF first 2.77 s | `capture_1795665206`, `_1795665210` |
+| 24 | Booth sequence, single drive, 3 shots | release→JPEG 1.12–1.25 s, LV 27.4 fps, gaps ≤367 ms | `test_booth_sequence_1795665215` |
+| 25 | `autofocus_wait` + capture PC FINE ×3 | AF 1.38–1.67 s, release→JPEG 0.85–1.11 s, total 2.8–3.1 s | `test_af_capture_1795665275` |
 
 ## Not attempted (by policy)
 DeleteObject, 0x9406 (format/sensor clean/firmware), 0x940D (power), 0x9606/9607

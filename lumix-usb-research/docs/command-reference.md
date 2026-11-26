@@ -148,8 +148,13 @@ Opcode:          0x9405
 Parameters:      p1 = 0x03000024 one-shot AF (tethr), others (libgphoto2 names):
                  0x03000021 AE lock, 0x03000022 AF lock, 0x03000023 AF/AE lock,
                  0x03000025 lock clear
-Response:        OK in 19 ms with focus lever on MF (no-op); followed by C101s
-Verification:    VERIFIED (accepted, MF); AF-S behaviour PENDING (needs lever on AFS)
+Response:        OK in 14–19 ms (asynchronous)
+Completion:      no dedicated event. Each C101 is acked with 0x9401; in the
+                 returned dump, 0x01000011 (u16) goes 0xFFFE idle -> 0x0000
+                 focusing (0x01000012 byte 4 = 3) -> 0xFFFF finished/locked.
+                 0x03000025 (lock clear) returns it to 0xFFFE.
+                 AF-S: 1.38–1.67 s on the test scene.
+Verification:    VERIFIED (AF-S lever; 6 AF cycles). Focus-failure value PENDING.
 ```
 
 ### 0x940A / 0x940B — Get/Set capture target
@@ -212,7 +217,7 @@ transfer), `0x9406` (format, sensor clean, firmware — **never send**), `0x9408
 
 | Code | Name | Params | Status |
 |---|---|---|---|
-| 0xC101 | AckRequired | 0x01000010 | VERIFIED; answered with 0x9401 |
+| 0xC101 | AckRequired / status changed | 0x01000010 | VERIFIED; answered with 0x9401, whose dump carries AF state (0x01000011) |
 | 0xC102 | PropChanged | property group (0x02000010, 0x02000021, 0x02000060, …) | VERIFIED |
 | 0xC104 | (config changed?) | 0x08000010 | VERIFIED seen after SD capture; meaning INFERRED |
 | 0xC107 | StatusChanged | 0x12000010 (remaining shots), 0x12000020 (exposure) | VERIFIED |

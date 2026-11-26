@@ -12,10 +12,10 @@ UI or Swift code lives here.
 | USB discovery / identification | VERIFIED (04DA:2382, PTP class, 3 endpoints) |
 | Session open/close (driver + 0x9102/0x9103) | VERIFIED |
 | Live view start/stop/frames | VERIFIED — 30 fps at 640×432, 960×640, 1280×856 |
-| Autofocus 0x9405 | Accepted; real AF-S test PENDING (lever was on MF) |
+| Autofocus 0x9405 | VERIFIED (AF-S), completion via C101 status dump, ~1.5 s |
 | Shutter 0x9404 | VERIFIED |
 | Capture-complete detection | VERIFIED (events C108 SD / C109 PC) |
-| Full-res JPEG retrieval | VERIFIED — 9.9 MB in ~0.3 s; shot→JPEG ≈2.9 s (PC target) |
+| Full-res JPEG retrieval | VERIFIED — ~10.6 MB in ~0.33 s; release→JPEG ≈1.0–1.2 s (PC target, JPEG FINE) |
 | Read/modify settings | VERIFIED (ISO, quality, capture target, liveview size) |
 | Recovery / reconnect | Implemented; physical unplug test PENDING |
 | LUMIX Tether USB traffic comparison | PENDING (USBPcap + Tether not installed) |

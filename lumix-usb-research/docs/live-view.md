@@ -77,6 +77,9 @@ lock; WPD/ICC also serialize):
   view continues while waiting for the object and even while the 9.9 MB JPEG
   downloads (frames interleave between transactions).
 * Live view did not need restarting after capture.
+* Re-run with drive mode single and 3 shots (`test_booth_sequence_1795665215`):
+  27.4 fps average, max gaps 334–367 ms, 35–38 frames during each ~1.5 s
+  capture+download window. (The first run above had a 2 s self-timer active.)
 
 ## Open questions
 

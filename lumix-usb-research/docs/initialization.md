@@ -40,7 +40,7 @@ status events; no host response is needed except C101, which we ack with 0x9401.
 ## Events that require a host response
 | Event | Response | Required? |
 |---|---|---|
-| C101 (p1=0x01000010) | 0x9401(p1) data-in (~4.9 KB status) | Not strictly (capture works without), done for parity with Tether |
+| C101 (p1=0x01000010) | 0x9401(p1) data-in (~4.9 KB status) | Not for capture; **yes to observe AF completion** (field 0x01000011) |
 
 ## Persistent state the host can change
 | State | Persists across vendor session? | Notes |

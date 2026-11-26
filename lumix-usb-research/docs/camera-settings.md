@@ -16,7 +16,7 @@ not settings use **0x9414**. Change notifications: event **C102** (p1 = group).
 | White balance | 0x02000050 | 51=2, 52=5500, 53=0, 54=0, 55=0 | Auto; K-set 5500 K; A-B/G-M 0 |
 | Exposure comp | 0x02000060 | 61=0, 62=(range) | 0 EV |
 | AF | 0x02000070 | 71=3, 72=17, 73..78 | AF mode 3 = **MF** (lever); 72 = AF area mode (17, UNKNOWN mapping) |
-| Camera mode | 0x02000080 | 81=3, 82=3, 83=22, 84=0, 85=2, 86=1, 87=0 | ModePos 3 = **M**; drive mode 3 (UNKNOWN mapping) |
+| Camera mode | 0x02000080 | 81=3→0, 82=3, 83=22, 84=0, 85=2, 86=1, 87=0 | ModePos 3 = **M**; drive mode 81: 3 = 2 s self-timer, 0 = single (VERIFIED with the user turning the dial) |
 | Image mode | 0x020000A0 | A1=8198, A2=4, A3=2 | quality 4 = RAW+FINE, aspect 2 = 3:2; A1 = size (UNKNOWN) |
 | Metering | 0x020000B0 | B1=1, B2=0, B3=3, B8=0 | UNKNOWN mapping |
 | Photo style | 0x02000010 | 11..1F | 11 = 0 (Standard) |
@@ -29,6 +29,7 @@ not settings use **0x9414**. Change notifications: event **C102** (p1 = group).
 | Image quality (0x020000A2, 2 B) | 0,1,4,5,3 | yes — VERIFIED set 0 and back to 4 |
 | AF mode (0x02000071, 2 B) | none | **no** (physical focus lever) |
 | Mode dial (0x02000082, 2 B) | none | **no** (physical dial) |
+| Drive mode (0x02000081, 2 B) | none | **no** (physical drive dial) |
 
 Quality table: on S5II the allowed set {0,1,3,4,5} matches tethr's DC-S9 table:
 `0 FINE, 1 STANDARD, 3 RAW, 4 RAW+FINE, 5 RAW+STANDARD` (S5II mapping of 0 and 4
@@ -45,7 +46,7 @@ VERIFIED by capture results: 4 → JPG+RW2, 0 → JPG only).
 | WhiteBalance_Param 0x02000051 | 2 | 2 auto, 4 daylight, 0x8008 cloudy, 6 tungsten, 5 fluorescent, 7 flash, 0x800F shade, 0x800B–E presets, 0x8010–13 K-set 1–4, 0x8014/15 auto cool/warm — VERIFIED read (2) |
 | WhiteBalance_KSet 0x02000052 | 2 | Kelvin (5500 VERIFIED read) |
 | PhotoStyle_Param 0x02000011 | 2 | 0 Standard, 1 Vivid, 2 Natural, 3 Mono, 4 Landscape, 5 Portrait, … (tethr table) |
-| AFArea_AFModeParam 0x02000071 | 2 | 3 MF, 4 AF-S, 5 AF-C, 6 AF-F (tethr) — 3 VERIFIED read |
+| AFArea_AFModeParam 0x02000071 | 2 | 3 MF, 4 AF-S, 5 AF-C, 6 AF-F (tethr) — 3 (MF) and 4 (AFS) VERIFIED via the lever |
 | CameraMode_ModePos 0x02000082 | 2 | 0 P, 1 A, 2 S, 3 M, 5 video, 7 iA, 8–10 C1–C3 (tethr) — 3 VERIFIED read |
 | ImageMode_ImageAspect 0x020000A3 | 2 | 1 4:3, 2 3:2, 3 16:9, 4 1:1, 10 65:24, 11 2:1 — 2 VERIFIED (liveview 3:2) |
 

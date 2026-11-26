@@ -1,6 +1,12 @@
 # Still capture
 
-**VERIFIED** on DC-S5M2 fw 3.6 (M mode, focus lever MF, quality RAW+FINE unless noted).
+**VERIFIED** on DC-S5M2 fw 3.6 (M mode, 1/160 s, quality RAW+FINE unless noted).
+
+> **Correction:** the first measurements (experiments 9–14, 21) were taken with the
+> drive dial on the **2 s self-timer** (`0x02000081` = 3). They are kept below for
+> reference; the single-shot numbers (dial on single, `0x02000081` = 0) supersede
+> them. The drive dial is physical and read-only over USB — the host should read
+> it and warn if it is not single.
 
 ## Answers
 
@@ -17,17 +23,28 @@
 | Needs 0x9102? | No (verified one SD shot without it). |
 | Needs C101 ack? | No (first capture completed unacknowledged); we ack anyway like LUMIX Tether. |
 
-## Timing (release → object event)
+## Timing, drive mode SINGLE (release → object event)
 
+| Target | Focus | Quality | Release→object | Download | Log |
+|---|---|---|---|---|---|
+| SD | AF-S, no prior AF | RAW+FINE | 3.16 s | – | capture_1795665206 |
+| SD | AF-S after AF lock | RAW+FINE | 2.77 s | – | capture_1795665210 |
+| PC | AF-S, no prior AF, LV on | FINE | 1.12, 1.24, 1.25 s | 0.32–0.36 s (10.7–11.3 MB) | test_booth_sequence_1795665215 |
+| PC | AF-S after `autofocus_wait` (1.38–1.67 s), LV on | FINE | 0.85, 1.11, 1.11 s | 0.30–0.35 s | test_af_capture_1795665275 |
+
+Booth figure: **AF ≈1.5 s + release→JPEG ≈1.0 s + download ≈0.33 s ≈ 2.8–3.1 s**
+from "start" to JPEG bytes on the host, USB 2.0 link, liveview running.
+Without a separate AF step, the release performs its own AF (AF-S) and the
+JPEG arrives ≈1.2 s after release.
+
+### Superseded (2 s self-timer was active)
 | Target | Quality | Release→object | Download |
 |---|---|---|---|
 | SD | RAW+FINE | 4.55 s, 4.59 s | 0.52 s (JPEG) |
 | PC | RAW+FINE | 2.54 s (JPEG first) | JPEG 0.30 s, RW2 (35.7 MB) 1.06 s |
 | PC | FINE only | 2.61 s, 2.63 s | 0.30 s, 0.33 s |
 
-With PC + FINE, a shot → JPEG on the host takes ≈ **2.9 s** at USB 2.0 speed.
-Most of that is in-camera processing (shutter 1/160 s); faster with smaller JPEG
-size or quality "standard" is untested.
+Download rates and SDRAM queue semantics from those runs are unaffected.
 
 ## Event sequence (SD, from `captures/direct/capture_1795664195.jsonl`)
 
@@ -61,8 +78,10 @@ storage config notification (INFERRED; format code not read).
 ```
 once:  0x940B target=PC ; 0x9403 quality=FINE (0x020000A2 = 0)  [read back]
        0x9412 liveview start
+check: 0x9402(0x02000080): drive 0x02000081 == 0 (single); AF mode 0x02000071 (lever)
 shot:  drain old events
-       (optional) 0x9405(0x03000024) AF, wait for focus (PENDING: AF-S test)
+       (optional) 0x9405(0x03000024) AF; wait until the C101 status dump field
+                  0x01000011 goes 0x0000 -> 0xFFFF (Camera.autofocus_wait)
        0x9404(0x03000011)
          GeneralError -> wait 1 s, retry once
        wait <=15 s (+ shutter time) for C109/C108
@@ -76,6 +95,7 @@ Implemented as `Camera.capture()` + `Camera.download()` in `src/lumix_usb/panaso
 
 ## Open items
 
-* AF-S behaviour: does `0x9404` refuse when focus fails? (tethr: silently no image)
+* AF failure: what 0x01000011 reports when focus fails, and whether `0x9404`
+  then refuses (tethr: silently no image). PENDING (needs lens covered).
 * Behaviour with no SD card inserted (both targets).
 * Burst/drive modes; `0x9113` skip; target BOTH (2).
