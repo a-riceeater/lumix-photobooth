@@ -120,11 +120,11 @@ final class ImageCaptureTransport: NSObject, PTPTransport, ICCameraDeviceDelegat
             }
         }
         // If the grace period expired, release the still-pending wait.
-        stateLock.lock()
-        readyWaitOver = true
-        let pending = readyContinuation
-        readyContinuation = nil
-        stateLock.unlock()
+        let pending: CheckedContinuation<Void, Never>? = stateLock.withLock {
+            readyWaitOver = true
+            defer { readyContinuation = nil }
+            return readyContinuation
+        }
         pending?.resume()
     }
 
@@ -136,10 +136,7 @@ final class ImageCaptureTransport: NSObject, PTPTransport, ICCameraDeviceDelegat
 
     func execute(_ opcode: UInt16, params: [UInt32], outData: Data?, timeout: TimeInterval) async throws -> PTPResponse {
         try await gate.withLock {
-            stateLock.lock()
-            let isClosed = closed
-            stateLock.unlock()
-            if isClosed { throw CameraTransportError.disconnected }
+            if stateLock.withLock({ closed }) { throw CameraTransportError.disconnected }
             // ImageCaptureCore owns the session; the transaction ID we put in
             // the container is expected to be managed by ICC (unverified on device).
             let command = PTPContainer.command(opcode: opcode, transactionID: nextTransactionID(), params: params)
@@ -164,10 +161,10 @@ final class ImageCaptureTransport: NSObject, PTPTransport, ICCameraDeviceDelegat
     }
 
     func close() async {
-        stateLock.lock()
-        let wasClosed = closed
-        closed = true
-        stateLock.unlock()
+        let wasClosed = stateLock.withLock {
+            defer { closed = true }
+            return closed
+        }
         eventContinuation.finish()
         guard !wasClosed else { return }
         camera.ptpEventHandler = { _ in }
