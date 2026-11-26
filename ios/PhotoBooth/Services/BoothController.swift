@@ -55,6 +55,8 @@ final class BoothController {
 
     func retake() {
         guard phase == .review, let id = currentSessionId else { return }
+        timerTask?.cancel()
+        autoAdvanceRemaining = nil
         try? store.discardPhotosForRetake(sessionId: id)
         thumbnails.removeAll()
         flowTask = Task { await runCapture(newSession: false) }
