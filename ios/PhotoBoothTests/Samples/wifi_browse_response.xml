@@ -1,0 +1,10 @@
+<s:Envelope xmlns:s="http://schemas.xmlsoap.org/soap/envelope/" s:encodingStyle="http://schemas.xmlsoap.org/soap/encoding/">
+  <s:Body>
+    <u:BrowseResponse xmlns:u="urn:schemas-upnp-org:service:ContentDirectory:1">
+      <Result>&lt;DIDL-Lite xmlns=&quot;urn:schemas-upnp-org:metadata-1-0/DIDL-Lite/&quot; xmlns:dc=&quot;http://purl.org/dc/elements/1.1/&quot; xmlns:upnp=&quot;urn:schemas-upnp-org:metadata-1-0/upnp/&quot; xmlns:pana=&quot;urn:schemas-panasonic-com:pana&quot;&gt;&lt;item id=&quot;11542444&quot; parentID=&quot;0&quot; restricted=&quot;0&quot;&gt;&lt;dc:title&gt;154-2444&lt;/dc:title&gt;&lt;upnp:writeStatus&gt;WRITABLE&lt;/upnp:writeStatus&gt;&lt;upnp:class name=&quot;imageItem&quot;&gt;object.item.imageItem&lt;/upnp:class&gt;&lt;res protocolInfo=&quot;http-get:*:application/octet-stream;PANASONIC.COM_PN=CAM_RAW_JPG;OriginalFileName=&#x27;P1542444.JPG&#x27;&quot; size=&quot;11601920&quot;&gt;http://10.0.0.177:50001/DO11542444.JPG&lt;/res&gt;&lt;res protocolInfo=&quot;http-get:*:application/octet-stream;PANASONIC.COM_PN=CAM_RAW;OriginalFileName=&#x27;P1542444.RW2&#x27;&quot; size=&quot;37247488&quot;&gt;http://10.0.0.177:50001/DO11542444.RW2&lt;/res&gt;&lt;res protocolInfo=&quot;http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_TN;DLNA.ORG_OP=01;DLNA.ORG_CI=1;DLNA.ORG_FLAGS=00900000000000000000000000000000;PANASONIC.COM_PN=CAM_TN&quot; size=&quot;5000&quot;&gt;http://10.0.0.177:50001/DT11542444.JPG&lt;/res&gt;&lt;res protocolInfo=&quot;http-get:*:image/jpeg:DLNA.ORG_PN=JPEG_MED;DLNA.ORG_OP=01;DLNA.ORG_CI=1;DLNA.ORG_FLAGS=00900000000000000000000000000000;PANASONIC.COM_PN=CAM_LRGTN&quot; size=&quot;100000&quot;&gt;http://10.0.0.177:50001/DL11542444.JPG&lt;/res&gt;&lt;dc:date&gt;2026-11-25T21:59:26+127:127&lt;/dc:date&gt;&lt;pana:X_Rating&gt;0&lt;/pana:X_Rating&gt;&lt;/item&gt;&lt;/DIDL-Lite&gt;</Result>
+      <NumberReturned>1</NumberReturned>
+      <TotalMatches>9</TotalMatches>
+      <UpdateID>1</UpdateID>
+    </u:BrowseResponse>
+  </s:Body>
+</s:Envelope>

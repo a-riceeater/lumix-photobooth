@@ -238,7 +238,7 @@ final class SessionFlowTests: XCTestCase {
         cam.start()
         try await Task.sleep(nanoseconds: 700_000_000)
         XCTAssertEqual(cam.state, .ready)
-        let data = try await cam.capture()
+        guard case .jpeg(let data) = try await cam.capture() else { return XCTFail("expected a JPEG") }
         let img = try XCTUnwrap(PreviewFeed.decode(data))
         XCTAssertEqual([img.width, img.height], [600, 400])
         await cam.stop()
@@ -300,6 +300,30 @@ final class SessionFlowTests: XCTestCase {
         booth.retake()   // ignored
         XCTAssertEqual(booth.phase, .review)
         XCTAssertEqual(booth.thumbnails.count, 2)
+        await cam.stop()
+    }
+
+    func testPhotosDeliveredAfterTheSessionLikeWiFi() async throws {
+        settings.photosPerSession = 3
+        settings.allowRetake = true
+        let store = SessionStore(root: root)
+        let uploads = UploadQueue(store: store, settings: settings, urlSession: FakeServer.urlSession())
+        let cam = MockCameraService(preferences: { CameraPreferences(mockDeferredDelivery: true, mockCaptureSize: CGSize(width: 300, height: 200)) })
+        cam.start()
+        try await Task.sleep(nanoseconds: 700_000_000)
+        let booth = BoothController(settings: settings, store: store, uploads: uploads, camera: { cam })
+        booth.tick = 10_000_000
+        var sawTransfer = false
+        booth.start()
+        for _ in 0..<400 where booth.phase != .review {
+            if case .transferring = booth.phase { sawTransfer = true }
+            try await Task.sleep(nanoseconds: 5_000_000)
+        }
+        XCTAssertTrue(sawTransfer, "photos are fetched after the last shot")
+        XCTAssertEqual(booth.phase, .review)
+        let id = try XCTUnwrap(booth.currentSessionId)
+        XCTAssertEqual(store.session(id)?.photos.map(\.index), [0, 1, 2], "all photos stored locally before upload")
+        XCTAssertEqual(booth.thumbnails.count, 3)
         await cam.stop()
     }
 
