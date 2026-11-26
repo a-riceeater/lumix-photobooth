@@ -129,6 +129,9 @@ def cmd_capture(args):
             tgt = {"sd": Target.SD, "pc": Target.PC, "both": Target.BOTH}[args.target]
             cam.set_capture_target(tgt)
         print("capture target:", cam.get_capture_target())
+        drive = cam.get_value(PROPS["drive_mode"])
+        if drive != 0:
+            print(f"WARNING: drive dial is not single (0x02000081={drive}; 3 = 2 s self-timer)")
         if args.liveview:
             cam.liveview_start()
         if args.af:
