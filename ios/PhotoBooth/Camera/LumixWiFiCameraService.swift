@@ -29,6 +29,8 @@ final class LumixWiFiCameraService: CameraService {
     @ObservationIgnored private let receiver = WiFiLiveViewReceiver(port: 49199)
     @ObservationIgnored private var streaming = false
     @ObservationIgnored private var busy = false
+    /// Capture, photo collection and mode restores never overlap.
+    @ObservationIgnored private let operation = AsyncLock()
     @ObservationIgnored private var running = false
     @ObservationIgnored private var blocked = false     // refused or halted: wait for operator
     @ObservationIgnored private var superviseTask: Task<Void, Never>?
@@ -111,6 +113,10 @@ final class LumixWiFiCameraService: CameraService {
             await c.setSession(sid)
             client = c
             try await enterRecordModeAndStream(c)
+            // The first getstate after pairing can be stale (the camera is in
+            // playback after every fresh pairing): confirm once the stream runs.
+            try await Task.sleep(nanoseconds: 1_500_000_000)
+            try await ensureShootingMode(c)
             info = CameraInfo(model: found.description.modelNumber, serial: found.description.friendlyName,
                               vendorExtensionID: 0, warnings: ["Wi-Fi: photos are fetched from the camera after each session's last shot."])
             state = .ready
@@ -138,6 +144,7 @@ final class LumixWiFiCameraService: CameraService {
             let body = try await c.cgi(query, timeout: 8, withSession: false)
             switch WiFiPairState(csv: body) {
             case .granted(let sid):
+                await c.setSession(sid)
                 _ = try? await c.cgi("mode=setsetting&type=device_name&value=\(name.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? "booth")", timeout: 6)
                 await c.expectUnresponsive(for: 0)
                 return sid
@@ -172,6 +179,25 @@ final class LumixWiFiCameraService: CameraService {
             try await switchToRecordMode(c)
         }
         try await startStream(c)
+    }
+
+    /// Fresh check before shooting: in playback the camera silently ignores both
+    /// `capture` and `startstream`, so restore shooting mode + stream first.
+    private func ensureShootingMode(_ c: LumixWiFiClient) async throws {
+        let s = try await c.state()
+        if s.isRecordMode {
+            if !streaming { try await startStream(c) }
+            return
+        }
+        guard s.isPlayMode, !s.isRecordingVideo else { throw LumixWiFiError.camera("unexpected camera mode \(s.camMode)") }
+        log.add("camera is in playback — switching to shooting mode")
+        if streaming { try await stopStream(c) }
+        try await switchToRecordMode(c)
+        try await startStream(c)
+        // Give the live view a moment to start flowing.
+        for _ in 0..<10 where (receiver.secondsSinceLastDatagram ?? 99) > 1 {
+            try await Task.sleep(nanoseconds: 200_000_000)
+        }
     }
 
     private func switchToRecordMode(_ c: LumixWiFiClient) async throws {
@@ -209,6 +235,8 @@ final class LumixWiFiCameraService: CameraService {
         keepaliveTask?.cancel()
         keepaliveTask = Task { [weak self] in
             var misses = 0
+            var playSightings = 0
+            var lastMode = ""
             while !Task.isCancelled {
                 try? await Task.sleep(nanoseconds: 3_000_000_000)
                 guard let self, self.client === c, !Task.isCancelled else { return }
@@ -216,17 +244,29 @@ final class LumixWiFiCameraService: CameraService {
                 do {
                     let s = try await c.state()
                     misses = 0
+                    if s.camMode != lastMode {
+                        self.log.add("camera mode: \(lastMode.isEmpty ? "?" : lastMode) → \(s.camMode)\(self.busy ? " (during capture/transfer)" : "")")
+                        lastMode = s.camMode
+                    }
                     if let b = Self.batteryPercent(s.battery) { self.info?.batteryPercent = b }
-                    guard !self.busy else { continue }
-                    if s.isPlayMode && !s.isRecordingVideo {
-                        self.log.add("camera left shooting mode — restoring")
-                        if self.streaming { try await self.stopStream(c) }
-                        try await self.switchToRecordMode(c)
-                        try await self.startStream(c)
+                    guard !self.busy else { playSightings = 0; continue }
+                    playSightings = s.isPlayMode && !s.isRecordingVideo ? playSightings + 1 : 0
+                    if playSightings >= 2 {
+                        playSightings = 0
+                        try await self.operation.withLock {
+                            self.log.add("camera left shooting mode — restoring (\(s.camMode))")
+                            self.state = .connecting
+                            if self.streaming { try await self.stopStream(c) }
+                            try await self.switchToRecordMode(c)
+                            try await self.startStream(c)
+                            self.state = .ready
+                        }
                     } else if self.streaming, let gap = self.receiver.secondsSinceLastDatagram, gap > 6 {
-                        self.log.add(String(format: "live view stalled (%.0f s) — restarting the stream", gap))
-                        try await self.stopStream(c)
-                        try await self.startStream(c)
+                        try await self.operation.withLock {
+                            self.log.add(String(format: "live view stalled (%.0f s) — restarting the stream", gap))
+                            try await self.stopStream(c)
+                            try await self.startStream(c)
+                        }
                     }
                 } catch {
                     misses += 1
@@ -266,10 +306,20 @@ final class LumixWiFiCameraService: CameraService {
     func prepareCapture() async throws {}
 
     func capture() async throws -> CaptureResult {
+        try await operation.withLock { try await captureLocked() }
+    }
+
+    private func captureLocked() async throws -> CaptureResult {
         guard let c = client, state.isReady else { throw CaptureError.notConnected }
         guard !busy else { throw CaptureError.busy }
         busy = true
         defer { busy = false }
+        do {
+            try await ensureShootingMode(c)
+        } catch {
+            await fail(c, error, during: "capture")
+            throw CaptureError.notConnected
+        }
         let started = Date()
         do {
             try await c.command("mode=camcmd&value=capture")
@@ -293,6 +343,10 @@ final class LumixWiFiCameraService: CameraService {
     }
 
     func collectPhotos(count: Int, progress: @escaping @MainActor (Int) -> Void) async throws -> [Data] {
+        try await operation.withLock { try await collectLocked(count: count, progress: progress) }
+    }
+
+    private func collectLocked(count: Int, progress: @escaping @MainActor (Int) -> Void) async throws -> [Data] {
         guard count > 0 else { return [] }
         guard let c = client else { throw CaptureError.notConnected }
         busy = true

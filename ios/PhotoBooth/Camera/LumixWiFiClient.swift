@@ -52,6 +52,12 @@ actor LumixWiFiClient {
             do {
                 let (data, resp) = try await session.data(for: r)
                 let status = (resp as? HTTPURLResponse)?.statusCode ?? 0
+                if label != "mode=getstate" {
+                    let ms = Int(Date().timeIntervalSince(started) * 1000)
+                    let text = String(decoding: data.prefix(200), as: UTF8.self)
+                    let summary = text.contains("<result>") ? (CamCGI.result(text) ?? "?") : text.hasPrefix("ok") || text.hasPrefix("err") ? String(text.prefix(40)) : "\(data.count) bytes"
+                    log("\(label) → \(status) \(summary) (\(ms) ms)")
+                }
                 if let text = String(data: data.prefix(300), encoding: .utf8), text.contains("<result>err_busy</result>") {
                     halt("err_busy on \(label)")
                     throw LumixWiFiError.halted("err_busy on \(label)")
