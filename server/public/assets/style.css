@@ -122,9 +122,11 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); text-align: cen
 .segmented { display: inline-flex; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 3px; }
 .segmented button { border: 0; background: transparent; color: var(--muted); font: inherit; font-weight: 600; padding: 6px 14px; border-radius: 7px; cursor: pointer; min-height: 36px; }
 .segmented button[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); }
-.grid[data-view="strips"] { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
-.grid[data-view="strips"] a.tile { aspect-ratio: 1 / 2; background: transparent; }
-.grid[data-view="strips"] a.tile img { object-fit: contain; }
+/* Strips: equal height, each as wide as its strip, so the gap is the only space between them. */
+.grid[data-view="strips"] { display: flex; flex-wrap: wrap; gap: 12px; }
+.grid[data-view="strips"] a.tile { aspect-ratio: auto; height: 340px; background: transparent; border-radius: 6px; }
+.grid[data-view="strips"] a.tile img { height: 100%; width: auto; object-fit: contain; }
+@media (max-width: 600px) { .grid[data-view="strips"] a.tile { height: 260px; } }
 
 /* session page: back to the event gallery */
 .back-link { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; margin: -8px 0 4px; color: var(--muted); text-decoration: none; font-weight: 600; font-size: 15px; }
