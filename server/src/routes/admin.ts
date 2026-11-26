@@ -4,6 +4,8 @@ import type { Ctx } from "../context.js";
 import { HttpError } from "../errors.js";
 import { safeEqual } from "../ids.js";
 import { rateLimit, readCookie, setCookie } from "../middleware.js";
+import { FONT_CHOICES, SINGLE_COLUMN_DEFAULTS } from "../themeBuilder.js";
+import { ThemeService } from "../themes.js";
 
 const ADMIN_COOKIE = "pb_admin";
 const ADMIN_TTL = 12 * 3600;
@@ -49,7 +51,31 @@ export function adminApiRouter(ctx: Ctx): Router {
     }
     next();
   });
+  // Theme uploads carry images as base64, so they get a larger body limit.
+  r.use("/themes", express.json({ limit: "60mb" }));
   r.use(express.json({ limit: "16kb" }));
+
+  const themes = new ThemeService(ctx);
+  r.get("/themes", (_req, res) => {
+    res.json({ ...themes.list(), defaults: SINGLE_COLUMN_DEFAULTS, fonts: FONT_CHOICES });
+  });
+  r.post("/themes/preview", async (req, res) => {
+    const jpeg = await themes.preview(req.body?.params, req.body ?? {}, req.body?.id);
+    res.setHeader("Cache-Control", "no-store");
+    res.type("jpeg").send(jpeg);
+  });
+  r.post("/themes", async (req, res) => {
+    res.status(req.body?.id ? 200 : 201).json({ id: await themes.save(req.body ?? {}) });
+  });
+  r.patch("/themes/:id", async (req, res) => {
+    if (typeof req.body?.enabled !== "boolean") throw new HttpError(400, "bad_request", "Send {\"enabled\": true|false}");
+    await themes.setEnabled(req.params.id, req.body.enabled);
+    res.json({ ok: true });
+  });
+  r.delete("/themes/:id", async (req, res) => {
+    await themes.remove(req.params.id);
+    res.json({ deleted: true });
+  });
 
   r.get("/overview", (_req, res) => {
     res.json(ops.overview());
