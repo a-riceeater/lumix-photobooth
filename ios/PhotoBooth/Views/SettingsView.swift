@@ -42,10 +42,11 @@ struct SettingsView: View {
                     Stepper("Countdown between photos: \(s.betweenPhotosCountdownSeconds) s", value: $s.betweenPhotosCountdownSeconds, in: 1...15)
                     Stepper(s.postCapturePreviewSeconds == 0 ? "Show each photo after capture: off" : "Show each photo after capture: \(s.postCapturePreviewSeconds) s",
                             value: $s.postCapturePreviewSeconds, in: 0...10)
+                    Stepper("Shutter fires \(s.shutterLeadMilliseconds) ms before \"Smile!\"", value: $s.shutterLeadMilliseconds, in: 0...600, step: 50)
                 } header: {
                     Text("Photos & timing")
                 } footer: {
-                    Text("A session takes about \(sessionSeconds(s)) s. Designs only appear in the gallery if they are made for this number of photos\(designCountNote(s)).")
+                    Text("Autofocus starts early (≈0.6 s AF-C, 0.9 s AF-S) so the photo is taken on cue; raise the shutter lead if photos still feel late. A session takes about \(sessionSeconds(s)) s. Designs only appear in the gallery if they are made for this number of photos\(designCountNote(s)).")
                 }
                 Section {
                     Toggle("Allow retake", isOn: $s.allowRetake)

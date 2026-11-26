@@ -37,6 +37,8 @@ final class AppSettings {
     var betweenPhotosCountdownSeconds: Int { didSet { save("betweenPhotosCountdownSeconds", betweenPhotosCountdownSeconds) } }
     /// Seconds each photo is shown fullscreen right after it is taken (0 = only the thumbnail strip).
     var postCapturePreviewSeconds: Int { didSet { save("postCapturePreviewSeconds", postCapturePreviewSeconds) } }
+    /// The shutter fires this long before "Smile!" appears (covers shutter lag).
+    var shutterLeadMilliseconds: Int { didSet { save("shutterLeadMilliseconds", shutterLeadMilliseconds) } }
     var mirrorPreview: Bool { didSet { save("mirrorPreview", mirrorPreview) } }
     var showFramingGuides: Bool { didSet { save("showFramingGuides", showFramingGuides) } }
     var fillScreenPreview: Bool { didSet { save("fillScreenPreview", fillScreenPreview) } }
@@ -78,6 +80,7 @@ final class AppSettings {
         countdownSeconds = int("countdownSeconds", 5)
         betweenPhotosCountdownSeconds = int("betweenPhotosCountdownSeconds", int("countdownSeconds", 5))
         postCapturePreviewSeconds = int("postCapturePreviewSeconds", 1)
+        shutterLeadMilliseconds = int("shutterLeadMilliseconds", 150)
         mirrorPreview = bool("mirrorPreview", true)
         showFramingGuides = bool("showFramingGuides", true)
         fillScreenPreview = bool("fillScreenPreview", false)

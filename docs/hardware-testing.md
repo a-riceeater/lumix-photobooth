@@ -61,7 +61,13 @@ Camera setup: USB mode **PC(Tether)** (Setup ▸ USB ▸ USB Mode), drive dial *
    image quality JPEG FINE, drive dial single = yes, preview fps. Note any warnings.
 3. *Take a test photo* → expect ~10–13 MB in roughly 1–3 s.
 4. Run a full guest session and confirm the uploaded originals are 6000 × 4000 (gallery ▸ download photo).
-5. Cover the lens and take a test photo → expect "The camera could not focus" within ~1–3 s, no hang.
+5. **Shutter timing:** during a session the app starts autofocus before the countdown ends (0.6 s ahead in
+   AF-C, 0.9 s in AF-S, from the AF times measured in the research) and fires the shutter *Shutter lead*
+   (default 150 ms) before "Smile!" appears. The research measured AF time and release→JPEG time, but not the
+   exact delay between the release command and the exposure, so tune *Settings ▸ Photos & timing ▸ Shutter
+   fires … before "Smile!"* on site: if guests are caught mid-reaction, increase it; if photos are taken
+   before the count finishes, lower it. *Camera diagnostics* logs each pre-focus time.
+6. Cover the lens and take a test photo → expect "The camera could not focus" within ~1–3 s, no hang.
 6. **Disconnect recovery:** during liveview pull the cable for ~10 s and reconnect; then power-cycle the camera.
    The state should go *Reconnecting* → *Connected* with liveview resuming. Check *Reconnects* and the log.
 7. Pull the cable *during* a countdown: the guest sees "camera is taking a short break", photos already taken

@@ -37,7 +37,11 @@ final class BoothController {
     @ObservationIgnored private let cameraProvider: () -> CameraService
     @ObservationIgnored private var flowTask: Task<Void, Never>?
     @ObservationIgnored private var timerTask: Task<Void, Never>?
-    @ObservationIgnored var tick: UInt64 = 1_000_000_000   // tests shorten this
+    @ObservationIgnored var tick: UInt64 = 1_000_000_000   // one "second" in ns; tests shorten this
+    @ObservationIgnored private let clock = ContinuousClock()
+    private var unit: Duration { .nanoseconds(Int64(tick)) }
+    /// Real seconds scaled by `tick` (so tests run fast).
+    private func seconds(_ s: Double) -> Duration { .nanoseconds(Int64(s * Double(tick))) }
 
     init(settings: AppSettings, store: SessionStore, uploads: UploadQueue, camera: @escaping () -> CameraService) {
         self.settings = settings
@@ -134,17 +138,31 @@ final class BoothController {
             while true {
                 let base = shot == 0 ? settings.countdownSeconds : settings.betweenPhotosCountdownSeconds
                 let countdown = attempt == 0 ? base : min(3, base)
+                // The camera works on its own schedule so the exposure lands on
+                // the cue ("Smile!") instead of after it: autofocus starts
+                // `focusLeadTime` early, the shutter fires `shutterLead` early.
+                let clock = self.clock
+                let cam = camera
+                let cue = clock.now + unit * max(1, countdown)
+                let shutterAt = cue - seconds(Double(settings.shutterLeadMilliseconds) / 1000)
+                let focusAt = shutterAt - seconds(cam.focusLeadTime)
+                let captureTask = Task { () throws -> Data in
+                    try await clock.sleep(until: max(focusAt, clock.now))
+                    try await cam.prepareCapture()
+                    try await clock.sleep(until: max(shutterAt, clock.now))
+                    return try await cam.capture()
+                }
                 for remaining in stride(from: max(1, countdown), through: 1, by: -1) {
                     phase = .countdown(shot: shot, remaining: remaining)
                     playSound(.tick)
-                    try? await Task.sleep(nanoseconds: tick)
-                    if Task.isCancelled { return }
+                    try? await clock.sleep(until: cue - unit * (remaining - 1))
+                    if Task.isCancelled { captureTask.cancel(); return }
                 }
                 phase = .capturing(shot: shot)
                 playSound(.shutter)
                 if settings.flashEffect { flashCounter += 1 }
                 do {
-                    let jpeg = try await camera.capture()
+                    let jpeg = try await captureTask.value
                     try await store.addPhoto(sessionId: id, index: shot, jpeg: jpeg)
                     if let t = await Self.thumbnail(jpeg) { thumbnails.append(t) }
                     retryMessage = nil
