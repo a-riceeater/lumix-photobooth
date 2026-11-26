@@ -22,7 +22,7 @@ rc.want_liveview = True
 end = time.monotonic() + SECONDS
 frames, last = 0, time.monotonic()
 outage_start, outages = None, []
-print(f"running {SECONDS:.0f}s — unplug/replug the camera USB cable now")
+print(f"running {SECONDS:.0f}s - unplug/replug the camera USB cable now")
 try:
     while time.monotonic() < end:
         try:
