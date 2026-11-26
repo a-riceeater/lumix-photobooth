@@ -99,11 +99,12 @@ struct SettingsView: View {
                     if s.operatorPIN == AppSettings.defaultPIN {
                         Label("The operator PIN is still the default (0000).", systemImage: "exclamationmark.triangle.fill").foregroundStyle(.orange)
                     }
+                    Toggle("Show settings button on welcome screen", isOn: $s.showSettingsButton)
                     LabeledContent("Guided Access", value: guidedAccess ? "On" : "Off")
                 } header: {
                     Text("Security & kiosk")
                 } footer: {
-                    Text("Open settings: hold the top-left corner of the booth screen for 3 seconds. For a locked kiosk enable Settings ▸ Accessibility ▸ Guided Access, then triple-click the side/home button in the booth.")
+                    Text("Open settings: tap the gear on the welcome screen, or hold the top-left corner for 1.5 s, or tap it 5 times quickly. For a locked kiosk enable Settings ▸ Accessibility ▸ Guided Access, then triple-click the side/home button in the booth.")
                 }
             }
             .navigationTitle("Operator settings")

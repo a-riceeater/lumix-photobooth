@@ -54,8 +54,8 @@ Open a seeded `http://localhost:8080/s/…` link (printed by the seed), the even
 ./scripts/bootstrap-ios.sh --open
 ```
 
-Run on an iPhone or iPad (choose your signing team in Xcode). On first launch hold the **top-left corner for
-3 seconds**, enter PIN **0000**, then set *Server URL* (your Mac's LAN address, e.g. `http://192.168.1.20:8080`),
+Run on an iPhone or iPad (choose your signing team in Xcode). On first launch tap the **gear in the top-left
+corner** (or hold that corner 1.5 s / tap it 5 times), enter PIN **0000**, then set *Server URL* (your Mac's LAN address, e.g. `http://192.168.1.20:8080`),
 paste `DEVICE_API_KEY`, choose *Mock camera*, tap *Test connection* and change the PIN. The full workflow now
 works without the camera. Physical testing steps: [docs/hardware-testing.md](docs/hardware-testing.md).
 
@@ -169,7 +169,7 @@ first, with exponential backoff and immediate retry when the network returns; a 
 synchronized after the server's checksums match the device's copies. Local photos are deleted only per the
 retention setting and only after verified sync, and are always accessible in the Files app.
 
-**Operator settings** (hold top-left corner 3 s, PIN; default `0000` — change it):
+**Operator settings** (gear on the welcome screen, or hold the top-left corner 1.5 s / tap it 5 times; then the PIN, default `0000` — change it). The gear can be hidden in settings once the booth is set up:
 
 | Section | Settings |
 |---|---|

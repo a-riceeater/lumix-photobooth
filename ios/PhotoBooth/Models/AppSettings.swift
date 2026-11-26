@@ -45,6 +45,8 @@ final class AppSettings {
     var maxRetakes: Int { didSet { save("maxRetakes", maxRetakes) } }
     var countdownSounds: Bool { didSet { save("countdownSounds", countdownSounds) } }
     var flashEffect: Bool { didSet { save("flashEffect", flashEffect) } }
+    /// Small gear on the welcome screen that opens the PIN pad.
+    var showSettingsButton: Bool { didSet { save("showSettingsButton", showSettingsButton) } }
     /// Welcome screen subtitle; empty = "We'll take N photos — get ready to pose!".
     var welcomeMessage: String { didSet { save("welcomeMessage", welcomeMessage) } }
     var offerEmail: Bool { didSet { save("offerEmail", offerEmail) } }
@@ -83,6 +85,7 @@ final class AppSettings {
         maxRetakes = int("maxRetakes", 1)
         countdownSounds = bool("countdownSounds", true)
         flashEffect = bool("flashEffect", true)
+        showSettingsButton = bool("showSettingsButton", true)
         welcomeMessage = str("welcomeMessage", "")
         offerEmail = bool("offerEmail", true)
         defaultDesignId = str("defaultDesignId", "")

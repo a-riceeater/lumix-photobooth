@@ -4,6 +4,9 @@ struct RootView: View {
     @Environment(AppModel.self) private var model
     @State private var showPIN = false
     @State private var showSettings = false
+    /// Set when the PIN was right; settings open once the PIN sheet has fully
+    /// closed (presenting during the dismissal is silently dropped by SwiftUI).
+    @State private var openSettingsAfterPIN = false
 
     var body: some View {
         let booth = model.booth
@@ -28,22 +31,22 @@ struct RootView: View {
                 .padding(16)
                 .allowsHitTesting(false)
 
-            // Hidden operator access: press and hold the top-left corner for 3 seconds.
-            Color.clear
-                .frame(width: 90, height: 90)
-                .contentShape(Rectangle())
-                .onLongPressGesture(minimumDuration: 3) { showPIN = true }
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-                .ignoresSafeArea()
-                .accessibilityHidden(true)
+            OperatorAccess(showGear: model.settings.showSettingsButton && booth.phase == .welcome) {
+                if !showPIN && !showSettings { showPIN = true }
+            }
         }
         .statusBarHidden(true)
         .persistentSystemOverlays(.hidden)
         .preferredColorScheme(.dark)
-        .sheet(isPresented: $showPIN) {
-            OperatorPINView(expected: model.settings.operatorPIN) {
-                showPIN = false
+        .sheet(isPresented: $showPIN, onDismiss: {
+            if openSettingsAfterPIN {
+                openSettingsAfterPIN = false
                 showSettings = true
+            }
+        }) {
+            OperatorPINView(expected: model.settings.operatorPIN) {
+                openSettingsAfterPIN = true
+                showPIN = false
             }
             .presentationDetents([.large])
             .interactiveDismissDisabled(false)
@@ -59,6 +62,47 @@ struct RootView: View {
         case .share: return 2
         default: return 0
         }
+    }
+}
+
+/// Ways into the operator settings (all lead to the PIN pad):
+/// * hold the top-left corner for 1.5 s, or tap it 5 times quickly;
+/// * the small gear on the welcome screen (operator setting, on by default).
+/// The hotspot stays inside the safe area so the rounded screen corner and the
+/// Notification Center swipe area don't swallow the touches.
+private struct OperatorAccess: View {
+    let showGear: Bool
+    let open: () -> Void
+    @State private var taps: [Date] = []
+
+    var body: some View {
+        ZStack(alignment: .topLeading) {
+            Color.clear
+                .frame(width: 120, height: 120)
+                .contentShape(Rectangle())
+                .onLongPressGesture(minimumDuration: 1.5) { open() }
+                .simultaneousGesture(TapGesture().onEnded {
+                    let now = Date()
+                    taps = taps.filter { now.timeIntervalSince($0) < 3 } + [now]
+                    if taps.count >= 5 {
+                        taps.removeAll()
+                        open()
+                    }
+                })
+                .accessibilityHidden(true)
+            if showGear {
+                Button(action: open) {
+                    Image(systemName: "gearshape.fill")
+                        .font(.system(size: 22))
+                        .foregroundStyle(.white.opacity(0.35))
+                        .frame(width: 56, height: 56)
+                        .contentShape(Rectangle())
+                }
+                .padding(8)
+                .accessibilityLabel("Operator settings")
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
     }
 }
 

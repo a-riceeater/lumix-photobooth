@@ -38,7 +38,7 @@ The `PTPTransport` and `CameraService` protocols are where a future transport wo
 1. `./scripts/bootstrap-ios.sh --open`, choose your team under *Signing & Capabilities* (or set
    `ios/PhotoBooth/Config/Local.xcconfig`), select the iPhone, Run.
 2. Start the server on your Mac (`cd server && npm run dev`) and find the Mac's LAN IP.
-3. In the app: hold the top-left corner for 3 s, PIN `0000`. Set *Server URL* `http://<mac-ip>:8080`, paste
+3. In the app: tap the gear in the top-left corner (or hold that corner 1.5 s / tap it 5 times), PIN `0000`. Set *Server URL* `http://<mac-ip>:8080`, paste
    `DEVICE_API_KEY`, *Test connection* → "API key accepted". Camera: *Mock camera*. Change the PIN.
    (Allow "Local Network" access when iOS asks.)
 4. Back to the booth: Start → countdown → 3 captures → review → share. Scan the QR code with another phone
