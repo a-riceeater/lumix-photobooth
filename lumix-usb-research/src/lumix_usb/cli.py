@@ -228,6 +228,18 @@ def cmd_get_desc(args):
         cam.disconnect()
 
 
+def cmd_status(args):
+    cam = open_camera(args)
+    try:
+        print(f"battery {cam.battery_percent()}%  remaining shots {cam.remaining_shots()}")
+        print("capture target:", {0: "SD", 1: "PC/SDRAM", 2: "both"}.get(cam.get_capture_target()))
+        for code in (0x12000010, 0x12000020, 0x16000010):
+            items = ", ".join(f"{k:08X}={v.hex()}" for k, v in cam.get_status(code).items())
+            print(f"0x{code:08X}: {items}")
+    finally:
+        cam.disconnect()
+
+
 def cmd_set_setting(args):
     cam = open_camera(args)
     try:
@@ -286,6 +298,7 @@ def main(argv=None):
     c.add_argument("--raw", action="store_true"); c.set_defaults(fn=cmd_get_desc)
     c = sp.add_parser("set-setting"); c.add_argument("name"); c.add_argument("value")
     c.add_argument("--size", type=int, default=2); c.set_defaults(fn=cmd_set_setting)
+    sp.add_parser("status").set_defaults(fn=cmd_status)
     c = sp.add_parser("events"); c.add_argument("--seconds", type=float, default=20)
     c.add_argument("--liveview", action="store_true"); c.set_defaults(fn=cmd_events)
     args = p.parse_args(argv)

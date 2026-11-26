@@ -265,6 +265,17 @@ class Camera:
             time.sleep(0.3)
         return r
 
+    def get_status(self, code: int) -> dict[int, bytes]:
+        """0x9414 status groups (verified S5II): 0x12000010 remaining shots/recording,
+        0x12000020 live exposure readout, 0x16000010 battery, 0x0D8000xx liveview."""
+        return parse_tlv(self.t.read(POC.GetStatus, code).check().data)
+
+    def battery_percent(self) -> int:
+        return struct.unpack_from("<I", self.get_status(0x16000010)[0x16000011])[0]
+
+    def remaining_shots(self) -> int:
+        return tlv_value(self.get_status(0x12000010)[0x12000011])
+
     def get_capture_target(self) -> int:
         tl = parse_tlv(self.t.read(POC.GetCaptureTarget, CAPTURE_TARGET_QUERY).check().data)
         return tlv_value(tl[CAPTURE_TARGET_PROP])
