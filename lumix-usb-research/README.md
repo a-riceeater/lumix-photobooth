@@ -18,7 +18,7 @@ UI or Swift code lives here.
 | Full-res JPEG retrieval | VERIFIED — ~10.6 MB in ~0.3 s; AF-C: AF command → JPEG on host ≈1.1–1.2 s (PC target, JPEG FINE) |
 | Read/modify settings | VERIFIED (ISO, quality, capture target, liveview size) |
 | Recovery / reconnect | VERIFIED — 3/3 cable pulls auto-recovered, liveview resumes at 30 fps |
-| LUMIX Tether USB traffic comparison | PENDING (USBPcap + Tether not installed) |
+| LUMIX Tether USB traffic comparison | DONE — Tether 2.12 uses the same PTP ops through the same driver; see docs/tether-traffic.md |
 
 Key result: everything runs through the **stock Windows MTP driver** using the
 WPD MTP vendor-extension API — no driver replacement, no extra USB interfaces,
@@ -67,7 +67,8 @@ docs/                           protocol documentation (start with command-refer
 [live-view](docs/live-view.md) · [capture](docs/capture.md) ·
 [file-transfer](docs/file-transfer.md) · [camera-settings](docs/camera-settings.md) ·
 [command-reference](docs/command-reference.md) · [troubleshooting](docs/troubleshooting.md) ·
-[ipados-compatibility](docs/ipados-compatibility.md) · [experiments](docs/experiments.md)
+[ipados-compatibility](docs/ipados-compatibility.md) · [experiments](docs/experiments.md) ·
+[tether-traffic](docs/tether-traffic.md)
 
 ## Safety rules followed
 No firmware, format, power, delete or USB-mode commands; no driver changes;

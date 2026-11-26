@@ -9,7 +9,7 @@ MTP vendor-extension commands (see `usb-transport.md`).
 | Tag | Meaning |
 |---|---|
 | **VERIFIED** | Executed by our implementation against the connected S5II; result checked. |
-| **TETHER** | Observed in LUMIX Tether USB traffic (pending — see `research.md` §Phase 2). |
+| **TETHER** | Observed in LUMIX Tether 2.12 USB traffic (`tether-traffic.md`, `captures/tether/`). |
 | **SOURCE** | Present in libgphoto2 (`camlibs/ptp2`) and/or tethr (`TethrPanasonic.ts`). |
 | **INFERRED** | Reasoned from data; not yet exercised. |
 | **UNKNOWN** | Not understood / not supported. |
@@ -208,8 +208,12 @@ p1 = 0x0D800011; data out: 11 00 80 0d 08 00 00 00 | u16 h, u16 w, u16 kib, u16 
 InvalidParameter immediately after liveview stop → retry.  VERIFIED.
 ```
 
-### 0x9416 — Manual focus drive
-SOURCE only: data `u32 0x03010011, u32 2, u16 mode` (1/2 far, 3/4 near). Not tested.
+### 0x9416 — Record-control setter (MF drive, touch AF)
+* SOURCE: MF drive, data `u32 0x03010011, u32 2, u16 mode` (1/2 far, 3/4 near). Not tested.
+* TETHER (touch AF, one click): `0x9416(0x030000A1)` data `a1000003 04000000 u16 x u16 y`,
+  then `0x9416(0x030000A2)` same data, then `0x9416(0x030000A4)` data `a4000003 00000000`.
+  x/y look like 0–1000 normalised. A1/A2 returned InvalidParameter in face/eye AF
+  area mode; A4 OK. Semantics of A1 vs A2 UNKNOWN (AF point vs AE point?).
 
 ### 0x9706 — Get liveview image
 ```
@@ -217,6 +221,25 @@ Params: none. Data in: TLV header + JPEG (see live-view.md).
 Response: OK with data while liveview runs; DeviceBusy with 0 bytes when off.
 Poll-based: one frame per transaction; 30.1 fps sustained. VERIFIED.
 ```
+
+### Observed in LUMIX Tether 2.12 traffic
+
+| Op | Params | Data | Notes | Status |
+|---|---|---|---|---|
+| 0x9404 | 0x03000018 | – | Tether's AF/AE button (half-press AF). AF result appears in C101 dumps exactly like 0x9405. | TETHER + VERIFIED (in focus 0.34 s ×2) |
+| 0x9110 | handle | in 154 B | ObjectInfo variant: u32 0x00010001, then ObjectInfo with **u64** CompressedSize | TETHER + VERIFIED (`ObjectInfo.parse_panasonic`) |
+| 0x9107 | code, 0, 0 | in | Descriptor header of 0x9108 (value list cut short); Tether calls it before every 0x9108 | TETHER |
+| 0x9104 | 1 | in 40 B | `01000100 0100 e607 1c00 …` ext device / version info | TETHER |
+| 0x9408 | 0x06000010 / 19 / 30 | in | movie settings groups (TLV) | TETHER |
+| 0x9417 | 0x0E000021 | in 10 B | TLV 0x0E000021 = 0; meaning UNKNOWN | TETHER |
+| 0x940A | 0x08000070 | in 41 B | 0x08000073 = camera name "S5M2-E86421" | TETHER |
+| 0x940A | 0x08000050 | in 10 B | 0x08000052 = 1 (UNKNOWN) | TETHER |
+| 0x940A | 0x08000010 | in 82 B | setup group incl. clock (u16 year, month, day, hour, min, sec …) | TETHER |
+| 0x940B | 0 | out `91000008 02000000 0200` | capture target **2 = SD + PC** | TETHER |
+| 0x9414 | 0x12000015 / 0x12000070 / 0x120100A0 / 0x15C00010 | in | status groups; 0x15C00010 read after event C104(0x15C00010) | TETHER |
+| 0x9103 | none | – | Tether closes with no parameter; OK on our side too | TETHER + VERIFIED |
+| 0x101B | handle, offset, 0x01E00000 | in | Tether downloads RAW in 30 MiB chunks | TETHER |
+| event 0x4006 | 0x5001 | – | standard DevicePropChanged (battery) | TETHER |
 
 ### Other opcodes (SOURCE only, not exercised)
 `0x9101`, `0x9107` (prop size), `0x9110`, `0x9112`/`0x9113` (partial / skip object

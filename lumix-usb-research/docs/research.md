@@ -24,26 +24,22 @@
 Panasonic uses standard PTP-over-USB with vendor operations/events; no separate
 USB interface. That was then confirmed on the device (usb-transport.md).
 
-## Phase 2 — USB traffic of LUMIX Tether (PENDING)
+## Phase 2 — USB traffic of LUMIX Tether (DONE, 2026-11-25)
 
-Status: **USBPcap 1.5.4.0 installed** (2026-11-25, `winget install desowin.USBPcap`,
-approved by the user). Its filter driver is not active until a reboot
-(`USBPcapCMD --extcap-interfaces` lists nothing, service stopped). It is a
-capture filter on the USB root hubs and does not replace the camera's MTP driver.
-LUMIX Tether **2.12 (2.12.0.5)** installed by the user (2026-11-25, `C:\Program Files\Panasonic\LUMIX Tether\`); this is the reference implementation for all tether-tagged items. planned
-isolated captures, one file each, in `captures/tether/`:
+USBPcap 1.5.4.0 (winget, user-approved; reboot required before its filter
+attached) + LUMIX Tether 2.12 (2.12.0.5). Five isolated recordings of the camera
+device only (keyboard/mouse/audio on the same hub excluded), plus one validation
+recording of our own implementation that decoded 1:1 against our JSONL log.
+Full results: **[tether-traffic.md](tether-traffic.md)**.
 
-1. connect (Tether start → camera recognized)
-2. idle 30 s (background polling)
-3. liveview on, 5 s, off
-4. AF (half-press / AF button in Tether)
-5. single capture with "save to PC"
-6. change ISO once
-7. disconnect (Tether exit)
+Summary: Tether uses only PTP transactions through the stock MTP driver; no
+keepalive; liveview = `0x9706` polling at ~30 fps; shutter `0x9404(0x03000011)`;
+objects via `C109`/`C108` → `0x9110` → `0x1009`/`0x101B`; settings via `0x9403` —
+all matching our implementation. New: `0x9404(0x03000018)` AF, `0x9110`
+ObjectInfo (u64 size), `0x9107`, `0x9416` touch AF, `0x9417`, capture target 2.
 
-Each will be dissected with `scripts/` tooling into opcode/param/data tables
-and compared to our implementation. Until then, nothing in the docs is tagged
-TETHER.
+Failed experiment: USBPcap with `-s 16777216 -b 67108864` captured only interrupt
+packets (no bulk); default options work.
 
 ## Phase 3 — independent implementation (DONE for core path)
 

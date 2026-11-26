@@ -114,6 +114,13 @@ end:   restore target / quality, 0x9412 stop, 0x9103
 ```
 Implemented as `Camera.capture()` + `Camera.download()` in `src/lumix_usb/panasonic.py`.
 
+## How LUMIX Tether does it (Phase 2, `tether-traffic.md`)
+Target 2 (SD + PC). Release `0x9404(0x03000011)` → `C109(0x12345678)` → `0x9110` →
+`0x1009` (JPEG, ≈0.94 s release→event, ≈1.55 s to bytes on host in AF-S) → second
+`C109` → `0x101B` RAW in 30 MiB chunks → SD copies announced by `C108`. A photo
+taken with the **camera's own shutter button** is delivered the same way, so a
+booth can also accept a physical button press on the camera.
+
 ## Open items
 
 * AF failure (VERIFIED, AF-C, lens covered): 0x01000011 = 0x0004 after ~1 s;

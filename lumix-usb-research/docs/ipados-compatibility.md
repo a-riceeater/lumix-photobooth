@@ -20,6 +20,11 @@ needs; whether iPadOS delivers it is a separate question. Status per item is
 | Sustained ~30 transactions/s | Yes, for 30 fps liveview | live-view.md |
 | Data-in up to ~36 MB (RW2) / ~10 MB (JPEG) in one transaction | Yes (or use GetPartialObject 0x101B) | file-transfer.md |
 
+LUMIX Tether 2.12 itself (Phase 2) also runs entirely on PTP transactions
+through the stock Windows MTP driver — no control transfers, no extra interfaces,
+no authentication (`tether-traffic.md`). So nothing Panasonic's own software does
+needs more than ImageCaptureCore's command interface offers.
+
 Because the Windows path is *already* "opcode + params + data through the OS
 PTP stack" — the same abstraction ImageCaptureCore exposes — every verified
 operation is **theoretically** expressible through ICC.

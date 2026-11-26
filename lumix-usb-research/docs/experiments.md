@@ -41,3 +41,16 @@ Times are local 2026-11-25. Log files: `captures/direct/<name>_<unixtime>.jsonl`
 ## Not attempted (by policy)
 DeleteObject, 0x9406 (format/sensor clean/firmware), 0x940D (power), 0x9606/9607
 (firmware upload), 0x9704 (USB mode), any driver replacement.
+
+## Phase 2 (LUMIX Tether 2.12 traffic, USBPcap)
+
+| # | Experiment | Result | Files |
+|---|---|---|---|
+| 33 | Validation: capture of our own sequence | 49 transactions decoded 1:1 with our JSONL; GetObject size exact after zero-padding | `captures/tether/00_validate_own.*` |
+| 34 | USBPcap `-s 16777216 -b 67108864` | **failed**: only interrupt packets recorded | `01_failed_bigsnaplen_no_bulk.pcap` |
+| 35 | Tether connect + idle | handshake decoded; no keepalive | `01_tether_connect_idle.*` |
+| 36 | Tether LV + AF + touch AF | 0x9404(0x03000018) AF; 0x9706 29–30 fps @960×720; 0x9416 A1/A2/A4 | `02_tether_liveview_af.*` |
+| 37 | Camera-body shutter, Tether downloads | C109 → 0x9110 → 0x1009; RAW via 0x101B 30 MiB; C108 SD copies | `03_tether_capture.*` |
+| 38 | App shutter + ISO 400/Auto | 0x9404(0x03000011); 0x9403 identical to ours | `04_tether_app_shutter_iso.*` |
+| 39 | Tether exit | single 0x9103 without parameter | `05_tether_exit.*` |
+| 40 | Our code: 0x9404(0x03000018) AF ×2, 0x9110, parameterless 0x9103 | in focus 0.34 s; 0x9110 = u32 + ObjectInfo(u64 size); 0x9103 OK; target found reset to 0 after Tether | `test_tether_variants_*` |
