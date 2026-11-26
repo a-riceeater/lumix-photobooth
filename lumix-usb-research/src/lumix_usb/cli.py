@@ -167,7 +167,11 @@ def cmd_list_objects(args):
                       f" / {si.max_capacity / 1e9:.1f} GB, {si.free_images} images free")
             except Exception as e:
                 print(f"storage 0x{sid:08X}: {e}")
-            hs = cam.object_handles(sid)
+            try:
+                hs = cam.object_handles(sid)
+            except Exception as e:
+                print(f"  GetObjectHandles: {e}")
+                continue
             print(f"  {len(hs)} objects")
             for h in hs[-args.last:]:
                 i = cam.object_info(h)

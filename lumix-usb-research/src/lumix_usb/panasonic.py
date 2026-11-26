@@ -253,7 +253,17 @@ class Camera:
     def set_property(self, code: int, value: int, size: int) -> Response:
         fmt = {1: "<B", 2: "<H", 4: "<I"}[size]
         payload = struct.pack("<II", code, size) + struct.pack(fmt, value)
-        return self.t.write(POC.SetProperty, payload, code)
+        return self._write_retry(POC.SetProperty, payload, code)
+
+    def _write_retry(self, opcode: int, payload: bytes, param: int, tries: int = 4) -> Response:
+        """Setters transiently return InvalidParameter/DeviceBusy, e.g. right after
+        liveview stop (observed on S5II) or while the lens moves (tethr, S9)."""
+        for i in range(tries):
+            r = self.t.write(opcode, payload, param)
+            if r.code not in (RC.InvalidParameter, RC.DeviceBusy) or i == tries - 1:
+                return r
+            time.sleep(0.3)
+        return r
 
     def get_capture_target(self) -> int:
         tl = parse_tlv(self.t.read(POC.GetCaptureTarget, CAPTURE_TARGET_QUERY).check().data)
@@ -261,7 +271,7 @@ class Camera:
 
     def set_capture_target(self, target: int) -> Response:
         payload = struct.pack("<IIH", CAPTURE_TARGET_PROP, 2, target)
-        return self.t.write(POC.SetCaptureTarget, payload, 0).check()
+        return self._write_retry(POC.SetCaptureTarget, payload, 0).check()
 
     # -- liveview -----------------------------------------------------------
     def liveview_settings(self) -> tuple[LiveviewSetting, list[LiveviewSetting]]:
