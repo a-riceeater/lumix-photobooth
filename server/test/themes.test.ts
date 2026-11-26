@@ -147,6 +147,22 @@ describe("admin theme API", () => {
     await s.agent.delete("/api/admin/themes/../classic-white").set("Authorization", basic).send({}).expect(404);
   });
 
+  it("saves a copy as a new theme without touching the original", async () => {
+    const { s, designs } = serverWithScratchDesigns();
+    const first = await s.agent.post("/api/admin/themes").set("Authorization", basic)
+      .send({ params: { name: "Banquet", photoCount: 4 }, background: await pngDataUrl(300, 900, "#ff0000") }).expect(201);
+    const before = fs.readFileSync(path.join(designs, first.body.id, "design.json"), "utf8");
+    // "Save as new theme" / Duplicate: copyFrom, no id, a different layout, no new upload.
+    const copy = await s.agent.post("/api/admin/themes").set("Authorization", basic)
+      .send({ copyFrom: first.body.id, params: { name: "Banquet", photoCount: 4, topMargin: 200 } }).expect(201);
+    expect(copy.body.id).toBe("banquet-2");
+    expect(fs.readFileSync(path.join(designs, "banquet", "design.json"), "utf8")).toBe(before);
+    expect(JSON.parse(fs.readFileSync(path.join(designs, "banquet-2", "design.json"), "utf8")).background).toBe("background.png");
+    const px = async (id: string) => [...(await sharp(path.join(designs, id, "background.png")).extract({ left: 5, top: 5, width: 1, height: 1 }).raw().toBuffer())].slice(0, 3);
+    expect(await px("banquet-2")).toEqual(await px("banquet"));
+    expect(fs.existsSync(path.join(designs, "_trash"))).toBe(false);
+  });
+
   it("rejects non-image uploads", async () => {
     const { s } = serverWithScratchDesigns();
     const r = await s.agent.post("/api/admin/themes").set("Authorization", basic)

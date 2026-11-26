@@ -6,6 +6,7 @@
   let defaults = null;
   let themes = [];
   let editing = null;          // theme being edited, or null for a new one
+  let copyFrom = null;         // new theme based on another one (its images are reused)
   let bgData = null;           // data URL of a newly chosen background
   let fgData = null;
   let previewTimer = null;
@@ -61,7 +62,10 @@
       meta.textContent = `${t.photoCount} photo${t.photoCount === 1 ? "" : "s"} · ${t.width}×${t.height}${t.editable ? " · made here" : ""}`;
       const btns = document.createElement("div");
       btns.className = "btns";
-      if (t.editable) btns.append(button("Edit", () => openBuilder(t)));
+      if (t.editable) {
+        btns.append(button("Edit", () => openBuilder(t)));
+        btns.append(button("Duplicate", () => openBuilder(t, { duplicate: true })));
+      }
       btns.append(button(t.enabled ? "Hide" : "Show", () => toggle(t)));
       btns.append(button("Delete", () => remove(t)));
       card.append(img, name, meta, btns);
@@ -95,10 +99,12 @@
   }
 
   // -- builder ---------------------------------------------------------------------
-  function openBuilder(theme) {
-    editing = theme || null;
+  function openBuilder(theme, opts = {}) {
+    editing = theme && !opts.duplicate ? theme : null;
+    copyFrom = theme && opts.duplicate ? theme : null;
     const p = { ...defaults, ...(theme ? theme.builder : {}) };
     if (!theme) p.name = "";
+    if (copyFrom) p.name = `${theme.name} copy`.slice(0, 60);
     bgData = null;
     fgData = null;
     $("b-bg").value = "";
@@ -107,6 +113,11 @@
     $("b-fg-remove").checked = false;
     $("b-bg-remove").parentElement.classList.toggle("hidden", !(theme && theme.hasBackground));
     $("b-fg-remove").parentElement.classList.toggle("hidden", !(theme && theme.hasForeground));
+    $("builder-save").textContent = editing ? "Save changes" : "Save theme";
+    $("builder-save-new").classList.toggle("hidden", !editing);
+    $("builder-mode").textContent = editing
+      ? `Editing “${theme.name}” — Save changes replaces it. Use “Save as new theme” to keep it and make another.`
+      : copyFrom ? `New theme based on “${theme.name}” (its images are reused unless you pick new ones).` : "";
     for (const el of form.elements) {
       if (!el.name || !(el.name in p)) continue;
       if (el.type === "checkbox") el.checked = Boolean(p[el.name]);
@@ -117,7 +128,7 @@
     if (!textOn) $("b-textpos").value = "bottom";
     syncTextFields();
     syncPreset();
-    $("builder-title").textContent = theme ? `Edit “${theme.name}”` : "New single-column theme";
+    $("builder-title").textContent = editing ? `Edit “${theme.name}”` : copyFrom ? "Duplicate theme" : "New single-column theme";
     $("builder-error").textContent = "";
     $("builder").classList.remove("hidden");
     $("builder").scrollIntoView({ behavior: "smooth", block: "start" });
@@ -127,6 +138,7 @@
   function closeBuilder() {
     $("builder").classList.add("hidden");
     editing = null;
+    copyFrom = null;
   }
 
   function params() {
@@ -146,6 +158,7 @@
   function payload() {
     return {
       id: editing ? editing.id : undefined,
+      copyFrom: copyFrom ? copyFrom.id : undefined,
       params: params(),
       background: bgData,
       foreground: fgData,
@@ -223,22 +236,30 @@
     if (e.target.id === "b-width" || e.target.id === "b-height") syncPreset();
     schedulePreview();
   });
-  form.addEventListener("submit", async (e) => {
-    e.preventDefault();
-    const save = $("builder-save");
-    save.disabled = true;
-    save.textContent = "Saving…";
+  async function save(asNew) {
+    const btn = asNew ? $("builder-save-new") : $("builder-save");
+    const label = btn.textContent;
+    const body = payload();
+    if (asNew) {
+      body.copyFrom = editing.id;   // keep the original, reuse its images
+      delete body.id;
+      if (body.params.name === editing.name) body.params.name = `${editing.name} copy`.slice(0, 60);
+    }
+    btn.disabled = true;
+    btn.textContent = "Saving…";
     try {
-      await api("POST", "/themes", payload());
+      await api("POST", "/themes", body);
       closeBuilder();
       changed();
     } catch (err) {
       $("builder-error").textContent = err.message;
     } finally {
-      save.disabled = false;
-      save.textContent = "Save theme";
+      btn.disabled = false;
+      btn.textContent = label;
     }
-  });
+  }
+  form.addEventListener("submit", (e) => { e.preventDefault(); save(false); });
+  $("builder-save-new").addEventListener("click", () => save(true));
 
   load();
 })();

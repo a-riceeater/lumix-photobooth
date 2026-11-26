@@ -125,10 +125,15 @@ export class ThemeService {
   }
 
   /** Creates a theme, or updates one made with the builder. Returns its id. */
-  async save(body: { id?: unknown; params?: unknown } & ThemeAssets): Promise<string> {
+  /**
+   * `id` set: update that theme in place. Otherwise a new theme is created;
+   * `copyFrom` reuses another theme's images (Duplicate / Save as new).
+   */
+  async save(body: { id?: unknown; copyFrom?: unknown; params?: unknown } & ThemeAssets): Promise<string> {
     const p = normalizeParams(body.params);
     const existing = body.id ? this.requireTheme(body.id) : undefined;
     if (existing && !existing.builder) throw badRequest("Only themes made in this page can be edited here");
+    const assetSource = existing ?? (body.copyFrom ? this.requireTheme(body.copyFrom) : undefined);
     const id = existing?.id ?? this.newId(p.name);
     const version = (existing?.version ?? 0) + 1;
     // Build in a hidden staging folder (the inner folder must be named after the id),
@@ -137,7 +142,7 @@ export class ThemeService {
     const staging = path.join(stagingRoot, id);
     const final = path.join(this.dir, id);
     try {
-      await this.writeFolder(staging, id, version, p, body, existing, existing?.enabled ?? true);
+      await this.writeFolder(staging, id, version, p, body, assetSource, existing?.enabled ?? true);
       if (existing) await this.toTrash(existing.id);
       await fsp.rename(staging, final);
     } finally {

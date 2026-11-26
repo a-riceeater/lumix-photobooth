@@ -32,7 +32,8 @@ Folders starting with `_` or `.` are ignored (handy for drafts).
 
 A preview with sample photos updates as you type. *Save theme* writes a normal design folder
 (`designs/<theme-id>/design.json` + PNGs + `preview.png`); the builder settings are stored in `design.json`
-under `"builder"`, so *Edit* reopens them. Saving an edit bumps `version` (so cached strips re-render) and moves
+under `"builder"`, so *Edit* reopens them. *Save changes* replaces the theme being edited; *Save as new
+theme* (or *Duplicate* on the card) keeps it and creates another one that reuses its images. Saving an edit bumps `version` (so cached strips re-render) and moves
 the previous version to `designs/_trash/`. Every theme — built-in or made here — can be **hidden** (stays
 installed, not offered to guests or the booth; stored as `"enabled": false`) or **deleted** (moved to
 `designs/_trash/`, restorable by moving it back). Themes made by hand can be hidden or deleted but are edited in

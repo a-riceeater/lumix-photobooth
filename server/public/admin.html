@@ -57,7 +57,7 @@
         <div class="theme-grid" id="themes"></div>
 
         <section class="card builder hidden" id="builder" aria-label="Theme builder">
-          <div class="panel-head"><h2 id="builder-title">New theme</h2><button class="btn small" type="button" id="builder-close">Close</button></div>
+          <div class="panel-head"><div><h2 id="builder-title">New theme</h2><p class="muted small-note" id="builder-mode"></p></div><button class="btn small" type="button" id="builder-close">Close</button></div>
           <div class="builder-layout">
             <form id="builder-form" class="builder-form">
               <fieldset>
@@ -109,6 +109,7 @@
               <p class="error" id="builder-error"></p>
               <div class="actions">
                 <button class="btn primary" type="submit" id="builder-save">Save theme</button>
+                <button class="btn hidden" type="button" id="builder-save-new">Save as new theme</button>
                 <button class="btn" type="button" id="builder-cancel">Cancel</button>
               </div>
             </form>
