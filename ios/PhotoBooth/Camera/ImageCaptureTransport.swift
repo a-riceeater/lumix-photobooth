@@ -79,6 +79,7 @@ final class ImageCaptureTransport: NSObject, PTPTransport, ICCameraDeviceDelegat
     private var transactionID: UInt32 = 0
     private var closed = false
     private var readyContinuation: CheckedContinuation<Void, Never>?
+    private var readyWaitOver = false
 
     var name: String { camera.name ?? "Panasonic camera" }
 
@@ -110,12 +111,17 @@ final class ImageCaptureTransport: NSObject, PTPTransport, ICCameraDeviceDelegat
             await withCheckedContinuation { (c: CheckedContinuation<Void, Never>) in
                 guard let self else { return c.resume() }
                 self.stateLock.lock()
+                if self.readyWaitOver {
+                    self.stateLock.unlock()
+                    return c.resume()
+                }
                 self.readyContinuation = c
                 self.stateLock.unlock()
             }
         }
         // If the grace period expired, release the still-pending wait.
         stateLock.lock()
+        readyWaitOver = true
         let pending = readyContinuation
         readyContinuation = nil
         stateLock.unlock()
