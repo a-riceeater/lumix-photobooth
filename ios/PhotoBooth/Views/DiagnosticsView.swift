@@ -14,6 +14,10 @@ struct DiagnosticsView: View {
                 LabeledContent("Implementation", value: cam.kind.label)
                 LabeledContent("State", value: cam.state.label)
                 LabeledContent("Preview", value: String(format: "%.1f fps", cam.preview.fps))
+                if let wifi = cam as? LumixWiFiCameraService {
+                    LabeledContent("Camera address", value: wifi.host ?? "searching…")
+                    LabeledContent("Reconnects", value: "\(wifi.reconnectCount)")
+                }
                 if let usb = cam as? LumixUSBCameraService {
                     LabeledContent("Camera access", value: usb.authorization)
                     LabeledContent("Reconnects", value: "\(usb.reconnectCount)")

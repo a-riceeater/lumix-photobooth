@@ -208,6 +208,17 @@ struct SettingsView: View {
         }
     }
 
+    private func cameraFooter(_ kind: CameraKind) -> String {
+        switch kind {
+        case .lumixUSB:
+            return "Set the S5II to USB mode PC(Tether), drive dial to single shot. Changes apply on the next (re)connect."
+        case .lumixWiFi:
+            return "On the camera: MENU → Setup → IN/OUT → LAN/Wi-Fi → Wi-Fi Function → New Connection → Remote Shooting & View → Via Network, and join the same Wi-Fi as this device. Accept the connection prompt the first time. Photos are saved on the camera's card and brought over after each session's last shot (about 4–7 s per photo). Image quality must include JPEG. If the camera ever stops responding, look at it before tapping Reconnect in diagnostics."
+        case .mock:
+            return "The mock camera lets you test the whole workflow without hardware."
+        }
+    }
+
     private var cameraSection: some View {
         @Bindable var s = model.settings
         return Section {
@@ -226,18 +237,23 @@ struct SettingsView: View {
                     Text("960 × 640").tag(960)
                     Text("1280 × 856").tag(1280)
                 }
+            } else if s.cameraKind == .lumixWiFi {
+                TextField("Camera address (empty = find automatically)", text: $s.wifiCameraHost)
+                    .keyboardType(.numbersAndPunctuation)
+                    .textInputAutocapitalization(.never)
+                    .autocorrectionDisabled()
+                TextField("Name shown on the camera", text: $s.wifiClientName)
             } else {
                 VStack(alignment: .leading) {
                     Text("Simulated capture failures: \(Int(s.mockFailureRate * 100))%")
                     Slider(value: $s.mockFailureRate, in: 0...0.5, step: 0.05)
                 }
+                Toggle("Deliver photos after the session (like Wi-Fi)", isOn: $s.mockDeferredDelivery)
             }
         } header: {
             Text("Camera")
         } footer: {
-            Text(s.cameraKind == .lumixUSB
-                 ? "Set the S5II to USB mode PC(Tether), drive dial to single shot. Changes apply on the next (re)connect."
-                 : "The mock camera lets you test the whole workflow without hardware.")
+            Text(cameraFooter(s.cameraKind))
         }
     }
 }

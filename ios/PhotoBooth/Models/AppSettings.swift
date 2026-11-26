@@ -63,6 +63,11 @@ final class AppSettings {
     var autofocusBeforeCapture: Bool { didSet { save("autofocusBeforeCapture", autofocusBeforeCapture) } }
     var liveviewWidth: Int { didSet { save("liveviewWidth", liveviewWidth) } }
     var mockFailureRate: Double { didSet { save("mockFailureRate", mockFailureRate) } }
+    var mockDeferredDelivery: Bool { didSet { save("mockDeferredDelivery", mockDeferredDelivery) } }
+    /// Wi-Fi camera address; empty = find it on the network.
+    var wifiCameraHost: String { didSet { save("wifiCameraHost", wifiCameraHost) } }
+    /// Name shown on the camera's "allow this device?" prompt.
+    var wifiClientName: String { didSet { save("wifiClientName", wifiClientName) } }
 
     var apiKey: String { didSet { Keychain.set("apiKey", apiKey) } }
     var operatorPIN: String { didSet { Keychain.set("operatorPIN", operatorPIN) } }
@@ -107,6 +112,9 @@ final class AppSettings {
         autofocusBeforeCapture = bool("autofocusBeforeCapture", true)
         liveviewWidth = int("liveviewWidth", 960)
         mockFailureRate = defaults.object(forKey: "mockFailureRate") == nil ? 0 : defaults.double(forKey: "mockFailureRate")
+        mockDeferredDelivery = bool("mockDeferredDelivery", false)
+        wifiCameraHost = str("wifiCameraHost", "")
+        wifiClientName = str("wifiClientName", "Photo Booth")
         apiKey = Keychain.get("apiKey") ?? ""
         operatorPIN = Keychain.get("operatorPIN") ?? AppSettings.defaultPIN
     }
@@ -127,7 +135,10 @@ final class AppSettings {
         CameraPreferences(
             options: CameraOptions(captureTarget: captureTarget, forceJPEGFine: forceJPEGFine,
                                    autofocusBeforeCapture: autofocusBeforeCapture, liveviewWidth: UInt16(clamping: liveviewWidth)),
-            mockFailureRate: mockFailureRate)
+            mockFailureRate: mockFailureRate,
+            mockDeferredDelivery: mockDeferredDelivery,
+            wifiHost: wifiCameraHost.trimmingCharacters(in: .whitespaces),
+            wifiClientName: wifiClientName.isEmpty ? "Photo Booth" : wifiClientName)
     }
 
     /// Cleans an operator-typed server address: trims spaces and trailing
