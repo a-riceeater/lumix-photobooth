@@ -35,6 +35,8 @@ Times are local 2026-11-25. Log files: `captures/direct/<name>_<unixtime>.jsonl`
 | 28 | Corrected `autofocus_wait` (stop on 0x0000/0x0004), lens covered ×3 | "failed" in 0.98–1.08 s. Re-interpretation: 0x0000 = in focus, 0xFFFF = result ended (rows 22/25/26 waited ~1 s too long) | `af_fail_detect_*` |
 | 29 | Lens uncovered, AFC, corrected wait: AF+release ×3, release-only ×3, images saved | in focus 0.23–0.34 s; totals 1.11–1.21 s (AF) / 1.07–1.13 s (release-only); release-only not blurrier | `test_af_modes_*` (2nd AFC run) |
 | 30 | Physical unplug ×3 during 120 s liveview with ResilientCamera | 3/3 auto-recovered; gaps 14.3 / 33.3 / 14.3 s; HRESULT 0x8007001F then 0x800701B1; no DEVICE_REMOVED event | `test_reconnect_1795666463` |
+| 31 | Lever AFS, corrected wait: AF ×3 trace, AF+release ×3, release-only ×3 | in focus 0.45–0.63 s; totals 1.44–1.56 s (AF) / 1.28–1.32 s (release-only) | `test_af_modes_*` (AFS run) |
+| 32 | `winget install desowin.USBPcap` (user-approved) | installed 1.5.4.0; filter inactive until reboot | – |
 
 ## Not attempted (by policy)
 DeleteObject, 0x9406 (format/sensor clean/firmware), 0x940D (power), 0x9606/9607

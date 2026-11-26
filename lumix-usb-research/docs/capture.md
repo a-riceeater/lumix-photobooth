@@ -34,6 +34,11 @@
 | PC | **AF-C after corrected `autofocus_wait` (in focus 0.23–0.34 s)**, LV on | FINE | 0.55, 0.58, 0.59 s | 0.29–0.32 s | test_af_modes (2nd AFC run) |
 | PC | AF-C, release only, LV on | FINE | 0.78–0.81 s (two runs) | 0.29–0.35 s | test_af_modes (both AFC runs) |
 | (superseded) | AF-C, old wait for 0xFFFF (1.25–1.36 s) | FINE | 0.55–0.98 s | 0.31–0.35 s | test_af_modes (1st AFC run) |
+| PC | **AF-S after corrected `autofocus_wait` (in focus 0.45–0.53 s)**, LV on | FINE | 0.72, 0.76, 0.76 s | 0.26–0.27 s | test_af_modes (AFS run) |
+| PC | AF-S, release only, LV on | FINE | 1.01–1.03 s | 0.27–0.29 s | test_af_modes (AFS run) |
+
+AF-S totals: AF + release + download **1.44–1.56 s**; release-only 1.28–1.32 s.
+AF-C is ≈0.3–0.4 s faster end to end on the same scene.
 
 **Booth figure (AF-C): AF command → JPEG bytes on host ≈ 1.1–1.2 s**
 (AF 0.23–0.34 s + release→object ≈0.57 s + download ≈0.3 s), USB 2.0, LV running.
@@ -117,6 +122,7 @@ Implemented as `Camera.capture()` + `Camera.download()` in `src/lumix_usb/panaso
   time out (we use 10–15 s) or check the AF result first.
 * The AF timings in the tables above that used `autofocus_wait` waited for
   0xFFFF (result *ended*), ~1 s later than focus was actually achieved (0x0000).
-  Re-measured for AF-C (above); AF-S re-measurement PENDING.
+  Re-measured for AF-C and AF-S (above). The older AF-S rows that used the
+  0xFFFF wait are superseded.
 * Behaviour with no SD card inserted (both targets).
 * Burst/drive modes; `0x9113` skip; target BOTH (2).

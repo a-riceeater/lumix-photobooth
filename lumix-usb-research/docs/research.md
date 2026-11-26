@@ -26,9 +26,11 @@ USB interface. That was then confirmed on the device (usb-transport.md).
 
 ## Phase 2 — USB traffic of LUMIX Tether (PENDING)
 
-Status: USBPcap and LUMIX Tether are **not installed** on the test PC. Both need
-an administrator install (USBPcap adds a capture filter driver to the USB root
-hubs; it does not replace the camera's driver; a reboot may be needed). Planned
+Status: **USBPcap 1.5.4.0 installed** (2026-11-25, `winget install desowin.USBPcap`,
+approved by the user). Its filter driver is not active until a reboot
+(`USBPcapCMD --extcap-interfaces` lists nothing, service stopped). It is a
+capture filter on the USB root hubs and does not replace the camera's MTP driver.
+LUMIX Tether is **not installed yet**. Planned
 isolated captures, one file each, in `captures/tether/`:
 
 1. connect (Tether start → camera recognized)
