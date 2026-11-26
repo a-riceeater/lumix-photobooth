@@ -48,10 +48,10 @@ const specs: Spec[] = [
       width: 1200, height: 3600, photoCount: 3,
       background: "background.png", foreground: "foreground.png", preview: "preview.png",
       backgroundColor: "#0a0a0a",
-      photos: slots3(130, 140, 940, 627, 90, { radius: 12 }),
+      photos: slots3(130, 200, 940, 627, 120, { radius: 12 }),
       texts: [
-        { text: "{eventName}", x: 0, y: 2930, width: 1200, align: "center", fontSize: 84, fontWeight: "bold", color: "#fafafa", fontFamily: "Helvetica, Arial, sans-serif" },
-        { text: "{date}", x: 0, y: 3060, width: 1200, align: "center", fontSize: 48, color: "#a1a1aa", fontFamily: "Helvetica, Arial, sans-serif" },
+        { text: "{eventName}", x: 0, y: 2700, width: 1200, align: "center", fontSize: 84, fontWeight: "bold", color: "#fafafa", fontFamily: "Helvetica, Arial, sans-serif" },
+        { text: "{date}", x: 0, y: 2820, width: 1200, align: "center", fontSize: 48, color: "#a1a1aa", fontFamily: "Helvetica, Arial, sans-serif" },
       ],
     },
     background: svg(1200, 3600, `<rect width="100%" height="100%" fill="#0a0a0a"/>`),

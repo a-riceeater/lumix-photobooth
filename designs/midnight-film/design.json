@@ -14,7 +14,7 @@
     {
       "index": 0,
       "x": 130,
-      "y": 140,
+      "y": 200,
       "width": 940,
       "height": 627,
       "fit": "cover",
@@ -23,7 +23,7 @@
     {
       "index": 1,
       "x": 130,
-      "y": 857,
+      "y": 947,
       "width": 940,
       "height": 627,
       "fit": "cover",
@@ -32,7 +32,7 @@
     {
       "index": 2,
       "x": 130,
-      "y": 1574,
+      "y": 1694,
       "width": 940,
       "height": 627,
       "fit": "cover",
@@ -43,7 +43,7 @@
     {
       "text": "{eventName}",
       "x": 0,
-      "y": 2930,
+      "y": 2700,
       "width": 1200,
       "align": "center",
       "fontSize": 84,
@@ -54,7 +54,7 @@
     {
       "text": "{date}",
       "x": 0,
-      "y": 3060,
+      "y": 2820,
       "width": 1200,
       "align": "center",
       "fontSize": 48,
