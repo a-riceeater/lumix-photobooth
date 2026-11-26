@@ -6,6 +6,8 @@ import { previewScale, renderDesign, renderLimiter } from "./render.js";
 import { fileExists, Storage } from "./storage.js";
 
 export type PhotoSize = "thumb" | "medium" | "original";
+/** full = design resolution; preview ≤ 1600 px (session page); thumb ≤ 700 px (event gallery grid). */
+export type StripSize = "full" | "preview" | "thumb";
 export const PHOTO_SIZES: Record<Exclude<PhotoSize, "original">, number> = { thumb: 480, medium: 1600 };
 
 /**
@@ -52,8 +54,9 @@ export class ImageService {
    * The cache key includes the design fingerprint, so editing a design
    * invalidates old renders automatically.
    */
-  async stripPath(session: SessionRow, design: Design, full: boolean, eventName: string): Promise<string> {
-    const kind = full ? "full" : "preview";
+  async stripPath(session: SessionRow, design: Design, size: StripSize, eventName: string): Promise<string> {
+    const full = size === "full";
+    const kind = size;
     const out = path.join(this.storage.generatedDir(session.event_id, session.id), `${design.id}-${design.fingerprint}-${kind}.jpg`);
     if (await fileExists(out)) return out;
     return this.once(out, async () => {
@@ -63,7 +66,7 @@ export class ImageService {
       }
       const date = new Date(session.captured_at ?? session.created_at);
       const buf = await renderLimiter.run(() =>
-        renderDesign(design, inputs, { scale: full ? 1 : previewScale(design), eventName, date }),
+        renderDesign(design, inputs, { scale: full ? 1 : previewScale(design, size === "thumb" ? 700 : 1600), eventName, date }),
       );
       await this.storage.writeReplace(out, buf);
       return out;

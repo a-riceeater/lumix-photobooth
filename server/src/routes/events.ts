@@ -1,5 +1,5 @@
 import { Router, type Request } from "express";
-import type { Ctx } from "../context.js";
+import { defaultDesignFor, type Ctx } from "../context.js";
 import type { EventRow } from "../db.js";
 import { HttpError, notFound } from "../errors.js";
 import { isEventId } from "../ids.js";
@@ -48,13 +48,18 @@ export function eventGalleryRouter(ctx: Ctx): Router {
     const offset = Math.max(0, Number(req.query.offset) || 0);
     const rows = ctx.sessions.completedSessions(event.id, limit + 1, offset);
     res.json({
-      sessions: rows.slice(0, limit).map((s) => ({
-        id: s.id,
-        url: ctx.sessions.galleryUrl(s.id),
-        thumbUrl: `${base}/api/sessions/${s.id}/photos/0?size=thumb`,
-        photoCount: s.photo_count,
-        capturedAt: s.captured_at ?? s.created_at,
-      })),
+      sessions: rows.slice(0, limit).map((s) => {
+        const design = defaultDesignFor(ctx, s, event);
+        return {
+          id: s.id,
+          url: ctx.sessions.galleryUrl(s.id),
+          thumbUrl: `${base}/api/sessions/${s.id}/photos/0?size=thumb`,
+          // The session's strip in its default theme (null if no theme fits its photo count).
+          stripUrl: design ? `${base}/api/sessions/${s.id}/strip?design=${design.id}&size=thumb` : null,
+          photoCount: s.photo_count,
+          capturedAt: s.captured_at ?? s.created_at,
+        };
+      }),
       nextOffset: rows.length > limit ? offset + limit : null,
     });
   });

@@ -148,8 +148,8 @@ export function apiRouter(ctx: Ctx): Router {
     if (!isDesignId(designId)) throw notFound("Design not found");
     const design = ctx.designs.get(designId);
     if (!design || design.photoCount !== session.photo_count) throw notFound("Design not available for this session");
-    const full = req.query.size !== "preview";
-    const file = await ctx.images.stripPath(session, design, full, event.name);
+    const size = req.query.size === "preview" || req.query.size === "thumb" ? req.query.size : "full";
+    const file = await ctx.images.stripPath(session, design, size, event.name);
     res.setHeader("Cache-Control", "public, max-age=3600");
     if (req.query.download) res.attachment(downloadName(event.id, session.id, `${design.id}.jpg`));
     res.type("jpeg").sendFile(file);

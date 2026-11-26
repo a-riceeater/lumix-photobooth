@@ -12,8 +12,14 @@
   <main class="wrap">
     <p class="eyebrow">Photo booth</p>
     <h1 id="event-name">&nbsp;</h1>
-    <p class="muted" id="count"></p>
-    <div class="grid" id="sessions"></div>
+    <div class="gallery-bar">
+      <p class="muted" id="count"></p>
+      <div class="segmented" role="group" aria-label="Show">
+        <button type="button" data-view="strips" aria-pressed="true">Strips</button>
+        <button type="button" data-view="photos" aria-pressed="false">Photos</button>
+      </div>
+    </div>
+    <div class="grid" id="sessions" data-view="strips"></div>
     <p class="center muted hidden" id="empty">No photos yet &mdash; check back soon.</p>
     <div class="actions"><button class="btn hidden" id="more" type="button">Load more</button></div>
   </main>

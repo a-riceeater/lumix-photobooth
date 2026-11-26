@@ -39,6 +39,25 @@ describe("gallery access", () => {
     expect(all).not.toMatch(/device|password|@/);
   });
 
+  it("offers each session's strip (default theme) as a small thumbnail", async () => {
+    const s = startServer();
+    await uploadSession(s, { eventId: "strips" });
+    await uploadSession(s, { eventId: "strips", count: 2 });   // no 2-photo theme installed
+    s.ctx.db.prepare(`UPDATE events SET gallery_mode = 'public' WHERE id = 'strips'`).run();
+    const page = await s.agent.get("/api/events/strips/sessions").expect(200);
+    const three = page.body.sessions.find((x: { photoCount: number }) => x.photoCount === 3);
+    const two = page.body.sessions.find((x: { photoCount: number }) => x.photoCount === 2);
+    expect(three.stripUrl).toMatch(/\/strip\?design=[\w-]+&size=thumb$/);
+    expect(two.stripUrl).toBeNull();
+    const path = new URL(three.stripUrl).pathname + new URL(three.stripUrl).search;
+    const img = await s.agent.get(path).buffer(true)
+      .parse((r, cb) => { const c: Buffer[] = []; r.on("data", (d: Buffer) => c.push(d)); r.on("end", () => cb(null, Buffer.concat(c))); })
+      .expect(200);
+    const sharp = (await import("sharp")).default;
+    const m = await sharp(img.body).metadata();
+    expect(Math.max(m.width!, m.height!)).toBeLessThanOrEqual(700);
+  });
+
   it("protects password galleries and accepts the right password", async () => {
     const s = startServer();
     await uploadSession(s, { eventId: "locked" });
