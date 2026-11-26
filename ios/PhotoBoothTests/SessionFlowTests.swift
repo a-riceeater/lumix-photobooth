@@ -272,6 +272,37 @@ final class SessionFlowTests: XCTestCase {
         await cam.stop()
     }
 
+    func testRetakeLimitAndTimingSettings() async throws {
+        settings.photosPerSession = 2
+        settings.betweenPhotosCountdownSeconds = 2
+        settings.postCapturePreviewSeconds = 1
+        settings.maxRetakes = 1
+        settings.countdownSounds = false
+        let store = SessionStore(root: root)
+        let uploads = UploadQueue(store: store, settings: settings, urlSession: FakeServer.urlSession())
+        let cam = MockCameraService(preferences: { CameraPreferences(mockCaptureSize: CGSize(width: 300, height: 200)) })
+        cam.start()
+        try await Task.sleep(nanoseconds: 700_000_000)
+        let booth = BoothController(settings: settings, store: store, uploads: uploads, camera: { cam })
+        booth.tick = 10_000_000
+        var sawPreview = false
+        booth.start()
+        for _ in 0..<300 where booth.phase != .review {
+            if case .showingShot = booth.phase { sawPreview = true }
+            try await Task.sleep(nanoseconds: 5_000_000)
+        }
+        XCTAssertTrue(sawPreview)
+        XCTAssertTrue(booth.canRetake)
+        booth.retake()
+        for _ in 0..<300 where booth.phase != .review { try await Task.sleep(nanoseconds: 5_000_000) }
+        XCTAssertEqual(booth.phase, .review)
+        XCTAssertFalse(booth.canRetake, "only one retake allowed")
+        booth.retake()   // ignored
+        XCTAssertEqual(booth.phase, .review)
+        XCTAssertEqual(booth.thumbnails.count, 2)
+        await cam.stop()
+    }
+
     func testCaptureFailuresEndInFriendlyProblemAndKeepPhotos() async throws {
         let store = SessionStore(root: root)
         let uploads = UploadQueue(store: store, settings: settings, urlSession: FakeServer.urlSession())

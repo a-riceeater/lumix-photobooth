@@ -77,7 +77,7 @@ final class AppModel {
             let cfg = try await client.config()
             settings.publicBaseURL = cfg.publicBaseUrl
             serverCheck = .ok(cfg)
-            designs = (try? await client.designs(photoCount: settings.photosPerSession)) ?? []
+            designs = (try? await client.designs()) ?? []
             uploads.retryNow()
         } catch {
             serverCheck = .failed((error as? LocalizedError)?.errorDescription ?? error.localizedDescription)

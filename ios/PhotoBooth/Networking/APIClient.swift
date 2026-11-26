@@ -123,9 +123,10 @@ struct APIClient {
         return try JSONDecoder().decode(ServerConfig.self, from: try await send(r))
     }
 
-    func designs(photoCount: Int) async throws -> [DesignInfo] {
+    func designs(photoCount: Int? = nil) async throws -> [DesignInfo] {
         struct Wrap: Decodable { var designs: [DesignInfo] }
-        let r = try request("GET", "/api/designs", query: [URLQueryItem(name: "photoCount", value: String(photoCount))], auth: false)
+        let query = photoCount.map { [URLQueryItem(name: "photoCount", value: String($0))] } ?? []
+        let r = try request("GET", "/api/designs", query: query, auth: false)
         return try JSONDecoder().decode(Wrap.self, from: try await send(r)).designs
     }
 

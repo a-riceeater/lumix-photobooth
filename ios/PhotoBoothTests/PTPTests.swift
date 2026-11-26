@@ -77,6 +77,19 @@ final class PTPTests: XCTestCase {
         for id in ids { XCTAssertNotNil(id.range(of: "^[A-Za-z0-9_-]{22}$", options: .regularExpression)) }
     }
 
+    @MainActor
+    func testServerURLNormalization() {
+        XCTAssertEqual(AppSettings.normalizeServerURL(" 192.168.1.20:8080/ "), "http://192.168.1.20:8080")
+        XCTAssertEqual(AppSettings.normalizeServerURL("https://photos.example.com/api/"), "https://photos.example.com")
+        XCTAssertEqual(AppSettings.normalizeServerURL("HTTPS://Photos.example.com"), "HTTPS://Photos.example.com")
+        XCTAssertNil(AppSettings.serverURLProblem("http://192.168.1.20:8080"))
+        XCTAssertNil(AppSettings.serverURLProblem("http://booth-server.local:8080"))
+        XCTAssertNil(AppSettings.serverURLProblem("https://photos.example.com"))
+        XCTAssertNotNil(AppSettings.serverURLProblem("http://photos.example.com"))
+        XCTAssertNotNil(AppSettings.serverURLProblem(""))
+        XCTAssertNotNil(AppSettings.serverURLProblem("http://"))
+    }
+
     func testEmailValidation() {
         XCTAssertTrue(isValidEmail("guest@example.com"))
         XCTAssertFalse(isValidEmail("guest@example"))

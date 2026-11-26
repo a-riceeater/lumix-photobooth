@@ -6,6 +6,8 @@ struct SettingsView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var newPIN = ""
     @State private var guidedAccess = UIAccessibility.isGuidedAccessEnabled
+    @State private var serverDraft = ""
+    @State private var apiKeyDraft = ""
 
     var body: some View {
         @Bindable var s = model.settings
@@ -115,6 +117,66 @@ struct SettingsView: View {
                 guidedAccess = UIAccessibility.isGuidedAccessEnabled
             }
         }
+    }
+
+    private var serverSection: some View {
+        let normalized = AppSettings.normalizeServerURL(serverDraft)
+        let problem = AppSettings.serverURLProblem(normalized)
+        let changed = normalized != model.settings.serverURL || apiKeyDraft != model.settings.apiKey
+        return Section {
+            TextField("https://photos.example.com", text: $serverDraft)
+                .keyboardType(.URL)
+                .textContentType(.URL)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+                .onSubmit(saveServer)
+            if !serverDraft.isEmpty, normalized != serverDraft.trimmingCharacters(in: .whitespaces) {
+                Text("Will be saved as \(normalized)").font(.footnote).foregroundStyle(.secondary)
+            }
+            if let problem, !serverDraft.isEmpty {
+                Text(problem).font(.footnote).foregroundStyle(.orange)
+            }
+            SecureField("API key (DEVICE_API_KEY from server/.env)", text: $apiKeyDraft)
+                .textInputAutocapitalization(.never)
+                .autocorrectionDisabled()
+            Button(changed ? "Save & test connection" : "Test connection", action: saveServer)
+                .disabled(normalized.isEmpty)
+            serverCheckRow
+            if !model.settings.publicBaseURL.isEmpty {
+                LabeledContent("QR codes link to", value: model.settings.publicBaseURL)
+            }
+        } header: {
+            Text("Server endpoint")
+        } footer: {
+            Text("Where the booth uploads photos: the server's address on this network (e.g. http://192.168.1.20:8080) or its public https address. QR codes always use the server's PUBLIC_BASE_URL. The API key is stored in the Keychain.")
+        }
+        .onAppear {
+            serverDraft = model.settings.serverURL
+            apiKeyDraft = model.settings.apiKey
+        }
+    }
+
+    private func saveServer() {
+        let normalized = AppSettings.normalizeServerURL(serverDraft)
+        guard !normalized.isEmpty else { return }
+        if normalized != model.settings.serverURL {
+            model.settings.serverURL = normalized
+            model.settings.publicBaseURL = ""   // re-learned from the new server
+        }
+        if apiKeyDraft != model.settings.apiKey { model.settings.apiKey = apiKeyDraft }
+        serverDraft = normalized
+        Task { await model.checkServer() }
+    }
+
+    private func sessionSeconds(_ s: AppSettings) -> Int {
+        let perShot = 2 + s.postCapturePreviewSeconds   // capture + transfer, then preview
+        return s.countdownSeconds + (s.photosPerSession - 1) * s.betweenPhotosCountdownSeconds + s.photosPerSession * perShot
+    }
+
+    private func designCountNote(_ s: AppSettings) -> String {
+        guard !model.designs.isEmpty else { return "" }
+        let n = model.designs.filter { $0.photoCount == s.photosPerSession }.count
+        return " (\(n) installed for \(s.photosPerSession) photo\(s.photosPerSession == 1 ? "" : "s"))"
     }
 
     private var statusSection: some View {

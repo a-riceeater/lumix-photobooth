@@ -169,10 +169,18 @@ first, with exponential backoff and immediate retry when the network returns; a 
 synchronized after the server's checksums match the device's copies. Local photos are deleted only per the
 retention setting and only after verified sync, and are always accessible in the Files app.
 
-**Operator settings** (hold top-left corner 3 s, PIN; default `0000` — change it): server URL, API key
-(Keychain), camera type and transport options, event name/ID, photos per session, countdown, preview mirroring,
-framing guides, default strip design, retake, email, review/reset timeouts, local retention, upload queue and
-retry, camera diagnostics with test capture, PIN, Guided Access status.
+**Operator settings** (hold top-left corner 3 s, PIN; default `0000` — change it):
+
+| Section | Settings |
+|---|---|
+| Server endpoint | server URL (cleaned up and validated, e.g. `192.168.1.20:8080` → `http://192.168.1.20:8080`), API key (Keychain), save & test connection, shows the public URL used in QR codes |
+| Event | event name and identifier, default strip design |
+| Photos & timing | photos per session (1–8), countdown before the first photo, countdown between photos, how long each photo is shown after capture (0 = off), estimated session length |
+| Review & sharing | allow retake, retakes per session (0 = unlimited), review auto-continue, offer email, return-to-start timeout |
+| Look & sound | welcome message, mirrored preview, framing guides, fill screen, countdown beeps/shutter sound, flash effect |
+| Camera | mock / LUMIX USB, capture target, JPEG FINE, autofocus, liveview size, simulated failures (mock), diagnostics with test capture |
+| Uploads & storage | upload queue, retry, local retention |
+| Security & kiosk | operator PIN, Guided Access status |
 
 ## Photo strip designs
 
