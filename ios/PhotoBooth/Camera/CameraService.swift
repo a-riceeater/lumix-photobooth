@@ -26,6 +26,8 @@ enum CameraState: Equatable {
     case ready
     case reconnecting(String)
     case failed(String)
+    /// Working on something else (e.g. finishing a photo transfer); back shortly.
+    case busy(String)
 
     var isReady: Bool { self == .ready }
 
@@ -38,6 +40,7 @@ enum CameraState: Equatable {
         case .ready: return "Connected"
         case .reconnecting(let why): return "Reconnecting (\(why))"
         case .failed(let why): return why
+        case .busy(let what): return what
         }
     }
 }
@@ -126,12 +129,21 @@ protocol CameraService: AnyObject {
     /// Full-resolution JPEGs of the newest `count` photos, oldest first
     /// (only for cameras whose capture returns `.storedOnCamera`).
     func collectPhotos(count: Int, progress: @escaping @MainActor (Int) -> Void) async throws -> [Data]
+    /// Quick path: small camera-made previews of the newest `count` photos.
+    /// The camera then stays ready to deliver the originals with `collectOriginals`.
+    /// Returns [] if previews are unavailable (originals still pending).
+    func collectPreviews(count: Int) async throws -> [Data]
+    /// Originals for the photos of the last `collectPreviews` call, then the
+    /// camera returns to shooting mode.
+    func collectOriginals(progress: @escaping @MainActor (Int) -> Void) async throws -> [Data]
     /// Drops and re-establishes the connection (operator action).
     func reconnect()
 }
 
 extension CameraService {
     func collectPhotos(count: Int, progress: @escaping @MainActor (Int) -> Void) async throws -> [Data] { [] }
+    func collectPreviews(count: Int) async throws -> [Data] { [] }
+    func collectOriginals(progress: @escaping @MainActor (Int) -> Void) async throws -> [Data] { [] }
 }
 
 /// Camera options derived from operator settings.
