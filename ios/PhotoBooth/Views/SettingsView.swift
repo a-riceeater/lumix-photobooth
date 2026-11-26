@@ -213,7 +213,7 @@ struct SettingsView: View {
         case .lumixUSB:
             return "Set the S5II to USB mode PC(Tether), drive dial to single shot. Changes apply on the next (re)connect."
         case .lumixWiFi:
-            return "On the camera: MENU → Setup → IN/OUT → LAN/Wi-Fi → Wi-Fi Function → New Connection → Remote Shooting & View → Via Network, and join the same Wi-Fi as this device. Accept the connection prompt the first time. Photos are saved on the camera's card and brought over after each session's last shot (about 4–7 s per photo). Image quality must include JPEG. With quick previews on, guests see their photos within a few seconds while the originals finish in the background; the next guest can start once they are saved. If the camera ever stops responding, look at it before tapping Reconnect in diagnostics."
+            return "On the camera: MENU → Setup → IN/OUT → LAN/Wi-Fi → Wi-Fi Function → New Connection → Remote Shooting & View → Via Network, and join the same Wi-Fi as this device. Accept the connection prompt the first time. Photos are saved on the camera's card and brought over after each session's last shot (about 4–7 s per photo). Image quality must include JPEG. With quick previews on, guests see their photos within a few seconds while the originals finish in the background; the next guest can start once they are saved. While connected, the camera's own buttons are locked: use Disconnect camera to hand it back (the booth stays disconnected until you tap Connect camera); the camera may then show ‘not connected to app’ — dismiss it. If the camera ever stops responding, look at it before tapping Reconnect in diagnostics."
         case .mock:
             return "The mock camera lets you test the whole workflow without hardware."
         }
@@ -226,6 +226,7 @@ struct SettingsView: View {
                 ForEach(CameraKind.allCases) { Text($0.label).tag($0) }
             }
             NavigationLink("Camera diagnostics") { DiagnosticsView() }
+            CameraConnectionButton()
             if s.cameraKind == .lumixUSB {
                 Picker("Capture target", selection: $s.captureTarget) {
                     ForEach(CaptureTarget.allCases, id: \.self) { Text($0.label).tag($0) }

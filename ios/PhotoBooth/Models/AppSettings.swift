@@ -71,6 +71,9 @@ final class AppSettings {
     /// Wi-Fi: show the camera's small previews first and fetch originals in the background.
     var wifiQuickPreviews: Bool { didSet { save("wifiQuickPreviews", wifiQuickPreviews) } }
 
+    /// Operator disconnected the camera: stay disconnected (even across launches) until "Connect".
+    var cameraReleased: Bool { didSet { save("cameraReleased", cameraReleased) } }
+
     var apiKey: String { didSet { Keychain.set("apiKey", apiKey) } }
     var operatorPIN: String { didSet { Keychain.set("operatorPIN", operatorPIN) } }
 
@@ -118,6 +121,7 @@ final class AppSettings {
         wifiCameraHost = str("wifiCameraHost", "")
         wifiClientName = str("wifiClientName", "Photo Booth")
         wifiQuickPreviews = bool("wifiQuickPreviews", true)
+        cameraReleased = bool("cameraReleased", false)
         apiKey = Keychain.get("apiKey") ?? ""
         operatorPIN = Keychain.get("operatorPIN") ?? AppSettings.defaultPIN
     }

@@ -357,6 +357,37 @@ final class SessionFlowTests: XCTestCase {
         await cam.stop()
     }
 
+    func testCameraDisconnectIsStickyAndBackgroundingReleasesAndReconnects() async throws {
+        settings.cameraKind = .mock
+        let model = AppModel(settings: settings, store: SessionStore(root: root))
+        model.camera.start()
+        try await Task.sleep(nanoseconds: 700_000_000)
+        XCTAssertTrue(model.camera.state.isReady)
+
+        // App goes to the background (also the path when it is swiped away) → released.
+        await model.suspendCameraForBackground()
+        XCTAssertEqual(model.camera.state, .stopped)
+        // Back to the foreground → reconnects on its own.
+        model.resumeCameraAfterBackground()
+        try await Task.sleep(nanoseconds: 800_000_000)
+        XCTAssertTrue(model.camera.state.isReady)
+
+        // Operator disconnect is sticky: backgrounding/foregrounding doesn't reconnect.
+        await model.releaseCamera()
+        XCTAssertEqual(model.camera.state, .stopped)
+        XCTAssertTrue(settings.cameraReleased)
+        await model.suspendCameraForBackground()
+        model.resumeCameraAfterBackground()
+        try await Task.sleep(nanoseconds: 800_000_000)
+        XCTAssertEqual(model.camera.state, .stopped)
+
+        model.connectCamera()
+        try await Task.sleep(nanoseconds: 800_000_000)
+        XCTAssertTrue(model.camera.state.isReady)
+        XCTAssertFalse(settings.cameraReleased)
+        await model.camera.stop()
+    }
+
     func testCaptureFailuresEndInFriendlyProblemAndKeepPhotos() async throws {
         let store = SessionStore(root: root)
         let uploads = UploadQueue(store: store, settings: settings, urlSession: FakeServer.urlSession())

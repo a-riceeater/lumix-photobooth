@@ -24,6 +24,8 @@ struct DiagnosticsView: View {
                     LabeledContent("Devices seen", value: usb.visibleCameras.isEmpty ? "none" : usb.visibleCameras.joined(separator: ", "))
                 }
                 Button("Reconnect camera") { cam.reconnect() }
+                    .disabled(model.settings.cameraReleased)
+                CameraConnectionButton()
             }
             if let info = cam.info {
                 Section("Camera") {
@@ -75,6 +77,34 @@ struct DiagnosticsView: View {
             }
         }
         .navigationTitle("Camera diagnostics")
+    }
+}
+
+/// Disconnect (sticky) / Connect. While the booth holds a Wi-Fi or USB
+/// session the camera's own buttons are locked; disconnecting hands it back.
+struct CameraConnectionButton: View {
+    @Environment(AppModel.self) private var model
+    @State private var working = false
+
+    var body: some View {
+        if model.settings.cameraReleased {
+            Button {
+                model.connectCamera()
+            } label: {
+                Label("Connect camera", systemImage: "link")
+            }
+        } else {
+            Button(role: .destructive) {
+                working = true
+                Task {
+                    await model.releaseCamera()
+                    working = false
+                }
+            } label: {
+                Label(working ? "Disconnecting…" : "Disconnect camera", systemImage: "link.badge.plus")
+            }
+            .disabled(working || model.booth.phase != .welcome)
+        }
     }
 }
 

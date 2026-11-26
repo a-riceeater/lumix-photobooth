@@ -82,6 +82,7 @@ private struct WelcomeOverlay: View {
 
     private var notReadyText: String {
         if case .busy(let what) = model.camera.state { return what }
+        if model.settings.cameraReleased { return "Camera disconnected" }
         return "Camera warming up…"
     }
 
