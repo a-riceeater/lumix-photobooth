@@ -46,6 +46,11 @@ Swift camera code compiled into a macOS harness: pairing, live view (30 fps), 3 
 4. If the state shows *Camera needs a check*: look at the camera (dismiss any message such as "connection
    lost"/"not connected to app", re-arm remote shooting if needed) **before** tapping *Reconnect*.
 5. Do not open LUMIX Sync (or another app) on the same camera at the same time.
+6. While the booth is connected the camera's own buttons are locked. *Settings ▸ Camera ▸ Disconnect camera*
+   (also in diagnostics) stops the stream and lets go; it stays disconnected — even after relaunching the app —
+   until *Connect camera*. Sending the app to the background or swiping it away releases the camera the same way
+   (any transfer in progress finishes first); coming back reconnects automatically. Test: background the app,
+   check the camera's buttons work, return, and confirm the booth reconnects within a few seconds.
 
 ## Step 1 — iPhone with the mock camera
 
