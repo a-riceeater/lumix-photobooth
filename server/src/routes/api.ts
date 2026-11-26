@@ -1,5 +1,5 @@
 import express, { Router, type Request, type Response } from "express";
-import archiver from "archiver";
+import { ZipArchive } from "archiver";
 import fs from "node:fs";
 import { defaultDesignFor, downloadName, viewableSession, type Ctx } from "../context.js";
 import { designSummary } from "../designs.js";
@@ -10,6 +10,9 @@ import { log } from "../log.js";
 import { rateLimit, requireDevice } from "../middleware.js";
 import { Storage } from "../storage.js";
 import { eventGalleryRouter } from "./events.js";
+
+/** Express 5 types route params loosely when middleware precedes the handler. */
+const pid = (req: Request): string => String(req.params.id);
 
 const IMMUTABLE = "public, max-age=31536000, immutable";
 
@@ -53,7 +56,7 @@ export function apiRouter(ctx: Ctx): Router {
   });
 
   r.get("/designs/:id/preview", async (req, res) => {
-    const d = ctx.designs.get(req.params.id);
+    const d = ctx.designs.get(pid(req));
     if (!d) throw notFound("Design not found");
     res.setHeader("Cache-Control", "public, max-age=300");
     if (d.preview) return res.sendFile(`${d.dir}/${d.preview}`);
@@ -70,34 +73,34 @@ export function apiRouter(ctx: Ctx): Router {
   r.post("/sessions/:id/photos", device, jpegBody, async (req, res) => {
     const index = req.query.index ?? req.get("x-photo-index");
     const sha = req.query.sha256 ?? req.get("x-photo-sha256");
-    const result = await ctx.sessions.addPhoto(req.params.id, index, req.body, sha);
+    const result = await ctx.sessions.addPhoto(pid(req), index, req.body, sha);
     res.status(result.duplicate ? 200 : 201).json(result);
   });
 
   r.post("/sessions/:id/complete", device, json, (req, res) => {
-    ctx.sessions.complete(req.params.id, req.body?.sha256);
+    ctx.sessions.complete(pid(req), req.body?.sha256);
     void ctx.email.processDue();
-    res.json(ctx.sessions.status(req.params.id));
+    res.json(ctx.sessions.status(pid(req)));
   });
 
   r.get("/sessions/:id/status", device, (req, res) => {
-    res.json(ctx.sessions.status(req.params.id));
+    res.json(ctx.sessions.status(pid(req)));
   });
 
   r.post("/sessions/:id/email", device, rateLimit({ windowMs: 60_000, max: 30, scope: "email" }), json, (req, res) => {
-    const result = ctx.email.enqueue(req.params.id, req.body?.email);
+    const result = ctx.email.enqueue(pid(req), req.body?.email);
     res.status(result.duplicate ? 200 : 202).json(result);
   });
 
   // -- public session viewing ------------------------------------------------
 
   r.get("/sessions/:id", (req, res) => {
-    const s = ctx.sessions.getSession(req.params.id);
+    const s = ctx.sessions.getSession(pid(req));
     if (!s || s.status !== "complete") {
       // Unknown and in-progress sessions are indistinguishable on purpose.
-      return res.status(202).json({ id: req.params.id, status: "processing" });
+      return res.status(202).json({ id: pid(req), status: "processing" });
     }
-    const { session, event } = viewableSession(ctx, req.params.id);
+    const { session, event } = viewableSession(ctx, pid(req));
     const sid = session.id;
     const api = `${base}/api/sessions/${sid}`;
     const def = defaultDesignFor(ctx, session, event);
@@ -128,7 +131,7 @@ export function apiRouter(ctx: Ctx): Router {
   });
 
   r.get("/sessions/:id/photos/:photoId", async (req, res) => {
-    const { session, event } = viewableSession(ctx, req.params.id);
+    const { session, event } = viewableSession(ctx, pid(req));
     const index = Number(req.params.photoId);
     if (!/^\d{1,2}$/.test(req.params.photoId) || !ctx.sessions.photo(session.id, index)) throw notFound("Photo not found");
     const size = (req.query.size ?? "original") as PhotoSize;
@@ -140,7 +143,7 @@ export function apiRouter(ctx: Ctx): Router {
   });
 
   r.get("/sessions/:id/strip", async (req, res) => {
-    const { session, event } = viewableSession(ctx, req.params.id);
+    const { session, event } = viewableSession(ctx, pid(req));
     const designId = req.query.design ?? defaultDesignFor(ctx, session, event)?.id;
     if (!isDesignId(designId)) throw notFound("Design not found");
     const design = ctx.designs.get(designId);
@@ -153,14 +156,14 @@ export function apiRouter(ctx: Ctx): Router {
   });
 
   r.get("/sessions/:id/download", (req: Request, res: Response) => {
-    const { session, event } = viewableSession(ctx, req.params.id as string);
+    const { session, event } = viewableSession(ctx, pid(req));
     const photos = ctx.sessions.photos(session.id);
     res.setHeader("Cache-Control", "no-store");
     res.attachment(downloadName(event.id, session.id, "photos.zip"));
     // JPEGs do not compress; "store" keeps this fast and streaming.
-    const zip = archiver("zip", { store: true });
-    zip.on("warning", (e) => log.warn("zip warning", { error: e.message }));
-    zip.on("error", (e) => {
+    const zip = new ZipArchive({ store: true });
+    zip.on("warning", (e: Error) => log.warn("zip warning", { error: e.message }));
+    zip.on("error", (e: Error) => {
       log.error("zip failed", { error: e.message });
       res.destroy(e);
     });
