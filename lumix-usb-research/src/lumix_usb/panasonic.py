@@ -169,6 +169,8 @@ class Camera:
         self._pump.start()
         self.vendor_session = False
         self.liveview_on = False
+        self.status: dict[int, bytes] = {}          # last 0x9401 status dump
+        self.status_cond = threading.Condition()
 
     # -- events -------------------------------------------------------------
     def _event_pump(self) -> None:
@@ -182,6 +184,10 @@ class Camera:
                     r = self.t.read(POC.AckEvent, ev.params[0])
                     self.t.log_note(kind="ack", param=f"0x{ev.params[0]:08X}",
                                     rc=f"0x{r.code:04X}", data=r.data.hex())
+                    if r.ok:
+                        with self.status_cond:
+                            self.status = parse_tlv(r.data)
+                            self.status_cond.notify_all()
                 except Exception as e:
                     self.t.log_note(kind="ack_error", error=repr(e))
             self.events.put(ev)
@@ -321,6 +327,30 @@ class Camera:
     def autofocus(self) -> Response:
         """One-shot AF (0x9405 / 0x03000024)."""
         return self.t.command(POC.AFAE, AF_ONESHOT)
+
+    def af_state(self) -> Optional[int]:
+        """0x01000011 from the last C101 status dump (VERIFIED transitions on S5II):
+        0xFFFE idle, 0x0000 focusing, 0xFFFF finished/locked."""
+        v = self.status.get(0x01000011)
+        return struct.unpack_from("<H", v)[0] if v and len(v) >= 2 else None
+
+    def autofocus_wait(self, timeout: float = 5.0) -> tuple[Response, Optional[int], float]:
+        """AF one-shot, then block until the status dump reports 0xFFFF (or timeout).
+        Returns (response, final af_state, seconds). Needs auto_ack=True."""
+        t0 = time.monotonic()
+        seen_busy = False
+        r = self.autofocus()
+        if not r.ok:
+            return r, self.af_state(), 0.0
+        with self.status_cond:
+            while (left := t0 + timeout - time.monotonic()) > 0:
+                st = self.af_state()
+                if st == 0x0000:
+                    seen_busy = True
+                elif st == 0xFFFF and seen_busy:
+                    break
+                self.status_cond.wait(left)
+        return r, self.af_state(), time.monotonic() - t0
 
     def af_control(self, param: int) -> Response:
         return self.t.command(POC.AFAE, param)
