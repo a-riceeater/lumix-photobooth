@@ -1,0 +1,61 @@
+{
+  "id": "postcard-4x6",
+  "name": "Postcard 4×6",
+  "version": 1,
+  "description": "Printable 6×4 inch landscape layout at 300 dpi.",
+  "width": 1800,
+  "height": 1200,
+  "photoCount": 3,
+  "background": "background.png",
+  "foreground": null,
+  "preview": "preview.png",
+  "photos": [
+    {
+      "index": 0,
+      "x": 50,
+      "y": 50,
+      "width": 1110,
+      "height": 740,
+      "fit": "cover"
+    },
+    {
+      "index": 1,
+      "x": 1200,
+      "y": 50,
+      "width": 550,
+      "height": 367,
+      "fit": "cover"
+    },
+    {
+      "index": 2,
+      "x": 1200,
+      "y": 423,
+      "width": 550,
+      "height": 367,
+      "fit": "cover"
+    }
+  ],
+  "texts": [
+    {
+      "text": "{eventName}",
+      "x": 50,
+      "y": 960,
+      "width": 1700,
+      "align": "center",
+      "fontSize": 96,
+      "fontWeight": "bold",
+      "color": "#1e3a8a",
+      "fontFamily": "Georgia, serif"
+    },
+    {
+      "text": "{date}",
+      "x": 50,
+      "y": 1070,
+      "width": 1700,
+      "align": "center",
+      "fontSize": 48,
+      "color": "#64748b",
+      "fontFamily": "Helvetica, Arial, sans-serif"
+    }
+  ]
+}

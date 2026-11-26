@@ -1,0 +1,65 @@
+{
+  "id": "midnight-film",
+  "name": "Midnight Film",
+  "version": 1,
+  "description": "Black film strip with sprocket holes overlapping the photos (foreground overlay).",
+  "width": 1200,
+  "height": 3600,
+  "photoCount": 3,
+  "background": "background.png",
+  "foreground": "foreground.png",
+  "preview": "preview.png",
+  "backgroundColor": "#0a0a0a",
+  "photos": [
+    {
+      "index": 0,
+      "x": 130,
+      "y": 140,
+      "width": 940,
+      "height": 627,
+      "fit": "cover",
+      "radius": 12
+    },
+    {
+      "index": 1,
+      "x": 130,
+      "y": 857,
+      "width": 940,
+      "height": 627,
+      "fit": "cover",
+      "radius": 12
+    },
+    {
+      "index": 2,
+      "x": 130,
+      "y": 1574,
+      "width": 940,
+      "height": 627,
+      "fit": "cover",
+      "radius": 12
+    }
+  ],
+  "texts": [
+    {
+      "text": "{eventName}",
+      "x": 0,
+      "y": 2930,
+      "width": 1200,
+      "align": "center",
+      "fontSize": 84,
+      "fontWeight": "bold",
+      "color": "#fafafa",
+      "fontFamily": "Helvetica, Arial, sans-serif"
+    },
+    {
+      "text": "{date}",
+      "x": 0,
+      "y": 3060,
+      "width": 1200,
+      "align": "center",
+      "fontSize": 48,
+      "color": "#a1a1aa",
+      "fontFamily": "Helvetica, Arial, sans-serif"
+    }
+  ]
+}

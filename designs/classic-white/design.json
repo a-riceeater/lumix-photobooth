@@ -1,0 +1,61 @@
+{
+  "id": "classic-white",
+  "name": "Classic White",
+  "version": 1,
+  "description": "Traditional 2×6 strip: three photos on white with the event name underneath.",
+  "width": 1200,
+  "height": 3600,
+  "photoCount": 3,
+  "background": "background.png",
+  "foreground": null,
+  "preview": "preview.png",
+  "photos": [
+    {
+      "index": 0,
+      "x": 60,
+      "y": 60,
+      "width": 1080,
+      "height": 720,
+      "fit": "cover"
+    },
+    {
+      "index": 1,
+      "x": 60,
+      "y": 840,
+      "width": 1080,
+      "height": 720,
+      "fit": "cover"
+    },
+    {
+      "index": 2,
+      "x": 60,
+      "y": 1620,
+      "width": 1080,
+      "height": 720,
+      "fit": "cover"
+    }
+  ],
+  "texts": [
+    {
+      "text": "{eventName}",
+      "x": 60,
+      "y": 2620,
+      "width": 1080,
+      "align": "center",
+      "fontSize": 92,
+      "fontWeight": "bold",
+      "color": "#18181b",
+      "fontFamily": "Georgia, serif"
+    },
+    {
+      "text": "{date}",
+      "x": 60,
+      "y": 2760,
+      "width": 1080,
+      "align": "center",
+      "fontSize": 56,
+      "color": "#71717a",
+      "fontFamily": "Helvetica, Arial, sans-serif"
+    }
+  ]
+}

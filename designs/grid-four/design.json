@@ -1,0 +1,51 @@
+{
+  "id": "grid-four",
+  "name": "Four Grid",
+  "version": 1,
+  "description": "2×2 grid for four-photo sessions (hidden for three-photo sessions).",
+  "width": 1800,
+  "height": 1200,
+  "photoCount": 4,
+  "background": null,
+  "foreground": null,
+  "preview": "preview.png",
+  "backgroundColor": "#ffffff",
+  "photos": [
+    {
+      "index": 0,
+      "x": 30,
+      "y": 30,
+      "width": 855,
+      "height": 555,
+      "fit": "cover",
+      "radius": 10
+    },
+    {
+      "index": 1,
+      "x": 915,
+      "y": 30,
+      "width": 855,
+      "height": 555,
+      "fit": "cover",
+      "radius": 10
+    },
+    {
+      "index": 2,
+      "x": 30,
+      "y": 615,
+      "width": 855,
+      "height": 555,
+      "fit": "cover",
+      "radius": 10
+    },
+    {
+      "index": 3,
+      "x": 915,
+      "y": 615,
+      "width": 855,
+      "height": 555,
+      "fit": "cover",
+      "radius": 10
+    }
+  ]
+}
