@@ -35,7 +35,8 @@ final class AppModel {
     private(set) var serverCheck: ServerCheck = .unknown
     private(set) var designs: [DesignInfo] = []
 
-    init(settings: AppSettings = AppSettings(), store: SessionStore? = nil) {
+    init(settings: AppSettings? = nil, store: SessionStore? = nil) {
+        let settings = settings ?? AppSettings()
         self.settings = settings
         let store = store ?? SessionStore()
         self.store = store
