@@ -83,17 +83,39 @@ actor AsyncLock {
     }
 }
 
-/// Runs `operation` but gives up after `seconds` (the operation keeps running
-/// in the background; callers treat the transport as broken afterwards).
+/// Resumes a continuation at most once (whichever of work/timeout finishes first).
+private final class ResumeOnce<T>: @unchecked Sendable {
+    private let lock = NSLock()
+    private var continuation: CheckedContinuation<T, Error>?
+    init(_ c: CheckedContinuation<T, Error>) { continuation = c }
+
+    @discardableResult
+    func resume(_ result: Result<T, Error>) -> Bool {
+        lock.lock()
+        let c = continuation
+        continuation = nil
+        lock.unlock()
+        guard let c else { return false }
+        c.resume(with: result)
+        return true
+    }
+}
+
+/// Runs `operation` but gives up after `seconds`. Unlike a task group this
+/// also returns when the operation ignores cancellation (e.g. an
+/// ImageCaptureCore callback that never arrives); the operation is cancelled
+/// and left to finish in the background, and callers treat the transport as
+/// broken afterwards.
 func withTimeout<T: Sendable>(_ seconds: TimeInterval, onTimeout: @escaping @Sendable () -> Error,
                               _ operation: @escaping @Sendable () async throws -> T) async throws -> T {
-    try await withThrowingTaskGroup(of: T.self) { group in
-        group.addTask { try await operation() }
-        group.addTask {
-            try await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
-            throw onTimeout()
+    try await withCheckedThrowingContinuation { (cont: CheckedContinuation<T, Error>) in
+        let once = ResumeOnce(cont)
+        let work = Task {
+            do { once.resume(.success(try await operation())) } catch { once.resume(.failure(error)) }
         }
-        defer { group.cancelAll() }
-        return try await group.next()!
+        Task {
+            try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
+            if once.resume(.failure(onTimeout())) { work.cancel() }
+        }
     }
 }

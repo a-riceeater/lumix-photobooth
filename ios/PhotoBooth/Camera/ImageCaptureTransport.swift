@@ -114,7 +114,12 @@ final class ImageCaptureTransport: NSObject, PTPTransport, ICCameraDeviceDelegat
                 self.stateLock.unlock()
             }
         }
-        stateLock.lock(); readyContinuation = nil; stateLock.unlock()
+        // If the grace period expired, release the still-pending wait.
+        stateLock.lock()
+        let pending = readyContinuation
+        readyContinuation = nil
+        stateLock.unlock()
+        pending?.resume()
     }
 
     private func nextTransactionID() -> UInt32 {
