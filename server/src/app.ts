@@ -62,8 +62,15 @@ export function createApp(ctx: Ctx): Express {
   app.use("/api", apiRouter(ctx));
   app.use("/api", apiNotFound);
   app.use("/admin", adminPagesRouter(ctx));
-  // Revalidate on every load (cheap 304 via ETag) so updates show up immediately.
-  app.use("/assets", express.static(path.join(PUBLIC_DIR, "assets"), { maxAge: 0, index: false, etag: true, lastModified: true }));
+  // Asset links carry a content hash (?v=…, added by the page router), so a
+  // versioned URL never changes and can be cached for a long time; plain URLs revalidate.
+  app.use("/assets", express.static(path.join(PUBLIC_DIR, "assets"), {
+    index: false,
+    etag: true,
+    setHeaders: (res, _file, ) => {
+      res.setHeader("Cache-Control", res.req.query.v ? "public, max-age=31536000, immutable" : "no-cache");
+    },
+  }));
   app.use(pagesRouter(ctx, PUBLIC_DIR));
   app.use((req, res) => {
     res.status(404).type("html").sendFile(path.join(PUBLIC_DIR, "404.html"));

@@ -1,4 +1,5 @@
 import express, { Router } from "express";
+import { createHash } from "node:crypto";
 import fs from "node:fs";
 import path from "node:path";
 import type { Ctx } from "../context.js";
@@ -8,12 +9,28 @@ import { galleryAccess, galleryCookieName } from "./events.js";
 
 const GALLERY_TTL = 30 * 24 * 3600;
 
+/**
+ * Adds a content fingerprint to every /assets/ link ("/assets/admin.js?v=1a2b3c4d").
+ * CDNs such as Cloudflare cache assets for hours regardless of our headers;
+ * a changed file gets a new URL, so a deploy is visible on the next page load.
+ */
+export function versionAssetLinks(html: string, publicDir: string): string {
+  return html.replace(/(["'])\/assets\/([\w.-]+)(\?v=[\w]+)?\1/g, (whole, quote: string, file: string) => {
+    try {
+      const hash = createHash("sha1").update(fs.readFileSync(path.join(publicDir, "assets", file))).digest("hex").slice(0, 10);
+      return `${quote}/assets/${file}?v=${hash}${quote}`;
+    } catch {
+      return whole;
+    }
+  });
+}
+
 /** Reads public/<name>.html once per process (or every time in development). */
 function page(publicDir: string, name: string): () => string {
   let cached: string | null = null;
   return () => {
     if (cached === null || process.env.NODE_ENV === "development") {
-      cached = fs.readFileSync(path.join(publicDir, `${name}.html`), "utf8");
+      cached = versionAssetLinks(fs.readFileSync(path.join(publicDir, `${name}.html`), "utf8"), publicDir);
     }
     return cached;
   };

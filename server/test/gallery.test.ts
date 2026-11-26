@@ -97,3 +97,18 @@ describe("gallery access", () => {
     await s.agent.get("/s/not-a-valid-id").expect(404);
   });
 });
+
+describe("asset versioning", () => {
+  it("fingerprints asset links so CDN caches can't serve stale scripts", async () => {
+    const s = startServer();
+    const page = await s.agent.get("/admin/").expect(200);
+    const links = [...page.text.matchAll(/\/assets\/([\w.-]+)\?v=([0-9a-f]{10})/g)];
+    expect(links.map((m) => m[1]).sort()).toEqual(["admin-themes.js", "admin.css", "admin.js", "style.css"]);
+    const versioned = await s.agent.get(`/assets/${links[0][1]}?v=${links[0][2]}`).expect(200);
+    expect(versioned.headers["cache-control"]).toContain("immutable");
+    const plain = await s.agent.get("/assets/style.css").expect(200);
+    expect(plain.headers["cache-control"]).toBe("no-cache");
+    const sessionPage = await s.agent.get("/s/AAAAAAAAAAAAAAAAAAAAAA").expect(200);
+    expect(sessionPage.text).toMatch(/\/assets\/session\.js\?v=[0-9a-f]{10}/);
+  });
+});
