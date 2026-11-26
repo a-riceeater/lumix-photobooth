@@ -142,5 +142,6 @@
     alert(`${r.requeued} emails queued again.`);
     refresh();
   });
+  window.addEventListener("themes-changed", refresh);
   refresh();
 })();
