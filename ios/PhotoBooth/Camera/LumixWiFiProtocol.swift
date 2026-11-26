@@ -125,6 +125,8 @@ struct CameraContentItem: Equatable {
     var size: Int
     /// Full-resolution JPEG, e.g. http://10.0.0.177:50001/DO11542445.JPG
     var jpegURL: URL
+    /// Camera-made ~100 KB preview (DL….JPG, PANASONIC.COM_PN=CAM_LRGTN), if listed.
+    var previewURL: URL? = nil
 }
 
 enum ContentDirectory {
@@ -156,6 +158,8 @@ enum ContentDirectory {
             cursor = close.upperBound
             let id = attribute("id", in: item) ?? ""
             // Each <res protocolInfo="…OriginalFileName='X.JPG'" size="N">URL</res>
+            var original: CameraContentItem?
+            var preview: URL?
             var resCursor = item.startIndex
             while let r = item.range(of: "<res ", range: resCursor..<item.endIndex),
                   let gt = item.range(of: ">", range: r.upperBound..<item.endIndex),
@@ -163,10 +167,16 @@ enum ContentDirectory {
                 resCursor = end.upperBound
                 let attrs = String(item[r.upperBound..<gt.lowerBound])
                 let urlText = String(item[gt.upperBound..<end.lowerBound]).trimmingCharacters(in: .whitespaces)
-                guard let name = originalFileName(in: attrs), name.uppercased().hasSuffix(".JPG"),
-                      let url = URL(string: urlText), url.lastPathComponent.uppercased().hasPrefix("DO") else { continue }
-                out.append(CameraContentItem(id: id, originalFileName: name, size: Int(attribute("size", in: attrs) ?? "") ?? 0, jpegURL: url))
-                break
+                guard let url = URL(string: urlText) else { continue }
+                let file = url.lastPathComponent.uppercased()
+                if file.hasPrefix("DL"), file.hasSuffix(".JPG") { preview = url }
+                if original == nil, let name = originalFileName(in: attrs), name.uppercased().hasSuffix(".JPG"), file.hasPrefix("DO") {
+                    original = CameraContentItem(id: id, originalFileName: name, size: Int(attribute("size", in: attrs) ?? "") ?? 0, jpegURL: url)
+                }
+            }
+            if var o = original {
+                o.previewURL = preview
+                out.append(o)
             }
         }
         return out
