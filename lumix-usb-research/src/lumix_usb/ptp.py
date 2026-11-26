@@ -228,6 +228,16 @@ class ObjectInfo:
                    r.u32(), r.u32(), r.u32(), r.u32(), r.u16(), r.u32(), r.u32(),
                    r.string(), r.string(), r.string(), r.string())
 
+    @classmethod
+    def parse_panasonic(cls, data: bytes) -> "ObjectInfo":
+        """Panasonic 0x9110 GetObjectInfo (seen in LUMIX Tether 2.12 traffic, verified on
+        S5II): u32 header (0x00010001), then ObjectInfo with a u64 CompressedSize."""
+        r = Reader(data, 4)
+        storage, fmt, prot, size = r.u32(), r.u16(), r.u16(), r.u64()
+        return cls(storage, fmt, prot, size, r.u16(), r.u32(), r.u32(), r.u32(),
+                   r.u32(), r.u32(), r.u32(), r.u32(), r.u16(), r.u32(), r.u32(),
+                   r.string(), r.string(), r.string(), r.string())
+
     @property
     def format_name(self) -> str:
         return OFC_NAMES.get(self.format, f"0x{self.format:04X}")

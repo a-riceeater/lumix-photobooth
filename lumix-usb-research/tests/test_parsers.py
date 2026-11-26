@@ -55,3 +55,14 @@ def test_objectinfo_sdram():
 
 def test_ptp_string_roundtrip():
     assert Reader(ptp_string("DC-S5M2")).string() == "DC-S5M2"
+
+
+def test_objectinfo_9110_tether():
+    # 0x9110 reply captured from LUMIX Tether 2.12 traffic (captures/tether/03_tether_capture)
+    oi = ObjectInfo.parse_panasonic((SAMPLES / "objectinfo_9110_tether.bin").read_bytes())
+    assert oi.storage_id == 0x00010001 and oi.format == 0x3801
+    assert oi.compressed_size == 13059072          # equals the GetObject length on the wire
+    assert (oi.width, oi.height) == (6000, 4000)
+    assert (oi.thumb_width, oi.thumb_height) == (160, 106)
+    assert oi.filename == "P1542443.JPG"
+    assert oi.capture_date.startswith("20261125T")

@@ -20,7 +20,9 @@ class POC:
     OpenSession = 0x9102          # p1 = 0x00010001
     CloseSession = 0x9103         # p1 = 0x00010001
     GetExtDeviceId = 0x9104
+    GetPropertySize = 0x9107      # descriptor header only (Tether calls it before 0x9108)
     GetPropertyDesc = 0x9108      # "ListProperty": current value + allowed values
+    GetObjectInfoExt = 0x9110     # ObjectInfo with u64 size (Tether uses it instead of 0x1008)
     AckEvent = 0x9401             # data-in; p1 = param1 of event 0xC101
     GetProperty = 0x9402          # data-in; p1 = property (group) code
     SetProperty = 0x9403          # data-out; p1 = property code
@@ -48,6 +50,7 @@ SESSION_PARAM = 0x00010001
 LV_START, LV_STOP = 0x0D000010, 0x0D000011
 LV_CURRENT, LV_OPTIONS = 0x0D800011, 0x0D800012
 RELEASE_SHUTTER = 0x03000011
+AF_HALFPRESS = 0x03000018      # 0x9404 param LUMIX Tether uses for its AF/AE button (verified)
 AF_LOCK_AE, AF_LOCK_AF, AF_LOCK_AFAE, AF_ONESHOT, AF_LOCK_CLEAR = (
     0x03000021, 0x03000022, 0x03000023, 0x03000024, 0x03000025)
 CAPTURE_TARGET_PROP = 0x08000091
@@ -428,6 +431,17 @@ class Camera:
         if not r.ok:
             raise PTPError(OC.GetObjectInfo, r.code)
         return ObjectInfo.parse(r.data)
+
+    def object_info_ext(self, handle: int) -> ObjectInfo:
+        """0x9110 variant used by LUMIX Tether (u64 CompressedSize)."""
+        r = self.t.read(POC.GetObjectInfoExt, handle)
+        if not r.ok:
+            raise PTPError(POC.GetObjectInfoExt, r.code)
+        return ObjectInfo.parse_panasonic(r.data)
+
+    def autofocus_halfpress(self) -> Response:
+        """AF as LUMIX Tether's AF/AE button does it: 0x9404(0x03000018)."""
+        return self.t.command(POC.Release, AF_HALFPRESS)
 
     def download(self, handle: int) -> bytes:
         return self.t.read(OC.GetObject, handle).check().data
