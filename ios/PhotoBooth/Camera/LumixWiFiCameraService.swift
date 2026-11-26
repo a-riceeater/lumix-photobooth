@@ -250,7 +250,7 @@ final class LumixWiFiCameraService: CameraService {
                         lastMode = s.camMode
                     }
                     if let b = Self.batteryPercent(s.battery) { self.info?.batteryPercent = b }
-                    guard !self.busy else { playSightings = 0; continue }
+                    guard !self.busy, !self.holdingPlayback else { playSightings = 0; continue }
                     playSightings = s.isPlayMode && !s.isRecordingVideo ? playSightings + 1 : 0
                     if playSightings >= 2 {
                         playSightings = 0
@@ -301,6 +301,7 @@ final class LumixWiFiCameraService: CameraService {
         }
         if client === c { client = nil }
         streaming = false
+        holdingPlayback = false   // a new connection starts by restoring shooting mode
         preview.clear()
     }
 
@@ -314,7 +315,7 @@ final class LumixWiFiCameraService: CameraService {
 
     private func captureLocked() async throws -> CaptureResult {
         guard let c = client, state.isReady else { throw CaptureError.notConnected }
-        guard !busy else { throw CaptureError.busy }
+        guard !busy, !holdingPlayback else { throw CaptureError.busy }
         busy = true
         defer { busy = false }
         do {
@@ -354,49 +355,136 @@ final class LumixWiFiCameraService: CameraService {
         guard let c = client else { throw CaptureError.notConnected }
         busy = true
         defer { busy = false }
-        let started = Date()
         var photos: [Data] = []
         var failure: Error?
         do {
-            try await stopStream(c)
-            try await c.command("mode=camcmd&value=playmode", timeout: 12)
-            try await Task.sleep(nanoseconds: 1_000_000_000)
-            let info = try await c.cgi("mode=get_content_info")
-            guard CamCGI.result(info) == "ok", let total = CamCGI.tag("total_content_number", in: info).flatMap({ Int($0) }), total >= count else {
-                throw LumixWiFiError.camera("content info unavailable")
-            }
-            var items: [CameraContentItem] = []
-            for index in (total - count)..<total {
-                guard let item = try await c.browse(start: index, count: 1).first else {
-                    throw LumixWiFiError.camera("photo \(index + 1) has no JPEG — set the camera's quality to FINE or RAW+FINE")
-                }
-                items.append(item)
-            }
-            log.add("fetching " + items.map(\.originalFileName).joined(separator: ", "))
-            for item in items {
-                let data = try await c.download(item.jpegURL, expectedBytes: item.size)
-                guard data.count > 3, data[data.startIndex] == 0xFF, data[data.startIndex + 1] == 0xD8 else { throw CaptureError.invalidImage }
-                photos.append(data)
-                progress(photos.count)
-            }
-            log.add(String(format: "fetched %d photo(s), %.1f MB in %.1f s", photos.count,
-                           Double(photos.reduce(0) { $0 + $1.count }) / 1_048_576, Date().timeIntervalSince(started)))
+            let items = try await enterPlaybackAndList(c, count: count)
+            photos = try await downloadOriginals(c, items, progress: progress)
         } catch {
             failure = error
             log.add("fetch failed: \((error as? LocalizedError)?.errorDescription ?? "\(error)")")
         }
-        // Always return the camera to shooting mode for the next guest (unless halted).
-        if await c.haltReason == nil {
-            do {
-                try await switchToRecordMode(c)
-                try await startStream(c)
-            } catch {
-                await fail(c, error, during: "return to shooting mode")
-            }
-        } else {
-            await fail(c, LumixWiFiError.halted(await c.haltReason ?? ""), during: "fetch")
-        }
+        await returnToShooting(c)
         if let failure { throw failure }
         return photos
+    }
+
+    // MARK: Quick previews, then originals in the background
+
+    /// Photos listed by the last `collectPreviews`; the camera stays in playback until they are fetched.
+    @ObservationIgnored private var pendingItems: [CameraContentItem] = []
+    @ObservationIgnored private var holdingPlayback = false
+
+    func collectPreviews(count: Int) async throws -> [Data] {
+        try await operation.withLock {
+            guard count > 0 else { return [] }
+            guard let c = client else { throw CaptureError.notConnected }
+            busy = true
+            defer { busy = false }
+            let items: [CameraContentItem]
+            do {
+                items = try await enterPlaybackAndList(c, count: count)
+            } catch {
+                await returnToShooting(c)
+                throw error
+            }
+            pendingItems = items
+            holdingPlayback = true
+            state = .busy("Getting the last photos…")
+            let started = Date()
+            var previews: [Data] = []
+            for item in items {
+                guard let url = item.previewURL,
+                      let data = try? await c.download(url, expectedBytes: 200_000),
+                      data.count > 3, data[data.startIndex] == 0xFF, data[data.startIndex + 1] == 0xD8 else {
+                    log.add("quick previews unavailable — waiting for the originals instead")
+                    if await c.haltReason != nil { await fail(c, LumixWiFiError.halted(await c.haltReason ?? ""), during: "previews") }
+                    return []
+                }
+                previews.append(data)
+            }
+            log.add(String(format: "previews: %d in %.2f s (%.0f KB)", previews.count, Date().timeIntervalSince(started),
+                           Double(previews.reduce(0) { $0 + $1.count }) / 1024))
+            return previews
+        }
+    }
+
+    func collectOriginals(progress: @escaping @MainActor (Int) -> Void) async throws -> [Data] {
+        try await operation.withLock {
+            guard let c = client, holdingPlayback else { throw CaptureError.notConnected }
+            busy = true
+            defer {
+                busy = false
+                holdingPlayback = false
+                pendingItems = []
+            }
+            var photos: [Data] = []
+            var failure: Error?
+            do {
+                photos = try await downloadOriginals(c, pendingItems, progress: progress)
+            } catch {
+                failure = error
+                log.add("originals failed: \((error as? LocalizedError)?.errorDescription ?? "\(error)") — still on the card: "
+                        + pendingItems.map(\.originalFileName).joined(separator: ", "))
+            }
+            await returnToShooting(c)
+            if let failure { throw failure }
+            return photos
+        }
+    }
+
+    /// Camera file names of the photos still waiting to be fetched (for operator messages).
+    var pendingFileNames: [String] { pendingItems.map(\.originalFileName) }
+
+    // MARK: Transfer helpers
+
+    /// stopstream → playmode → content count → browse the newest `count` items one at a time.
+    private func enterPlaybackAndList(_ c: LumixWiFiClient, count: Int) async throws -> [CameraContentItem] {
+        try await stopStream(c)
+        try await c.command("mode=camcmd&value=playmode", timeout: 12)
+        try await Task.sleep(nanoseconds: 1_000_000_000)
+        let info = try await c.cgi("mode=get_content_info")
+        guard CamCGI.result(info) == "ok", let total = CamCGI.tag("total_content_number", in: info).flatMap({ Int($0) }), total >= count else {
+            throw LumixWiFiError.camera("content info unavailable")
+        }
+        var items: [CameraContentItem] = []
+        for index in (total - count)..<total {
+            guard let item = try await c.browse(start: index, count: 1).first else {
+                throw LumixWiFiError.camera("photo \(index + 1) has no JPEG — set the camera's quality to FINE or RAW+FINE")
+            }
+            items.append(item)
+        }
+        log.add("on the card: " + items.map(\.originalFileName).joined(separator: ", "))
+        return items
+    }
+
+    private func downloadOriginals(_ c: LumixWiFiClient, _ items: [CameraContentItem],
+                                   progress: @escaping @MainActor (Int) -> Void) async throws -> [Data] {
+        let started = Date()
+        var photos: [Data] = []
+        for item in items {
+            let data = try await c.download(item.jpegURL, expectedBytes: item.size)
+            guard data.count > 3, data[data.startIndex] == 0xFF, data[data.startIndex + 1] == 0xD8 else { throw CaptureError.invalidImage }
+            photos.append(data)
+            progress(photos.count)
+        }
+        log.add(String(format: "originals: %d, %.1f MB in %.1f s", photos.count,
+                       Double(photos.reduce(0) { $0 + $1.count }) / 1_048_576, Date().timeIntervalSince(started)))
+        return photos
+    }
+
+    /// Back to shooting mode + live view for the next guest (unless halted).
+    private func returnToShooting(_ c: LumixWiFiClient) async {
+        if let reason = await c.haltReason {
+            await fail(c, LumixWiFiError.halted(reason), during: "transfer")
+            return
+        }
+        do {
+            try await switchToRecordMode(c)
+            try await startStream(c)
+            if case .busy = state { state = .ready }
+        } catch {
+            await fail(c, error, during: "return to shooting mode")
+        }
     }
 }
