@@ -125,3 +125,7 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); text-align: cen
 .grid[data-view="strips"] { grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); }
 .grid[data-view="strips"] a.tile { aspect-ratio: 1 / 2; background: transparent; }
 .grid[data-view="strips"] a.tile img { object-fit: contain; }
+
+/* session page: back to the event gallery */
+.back-link { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; margin: -8px 0 4px; color: var(--muted); text-decoration: none; font-weight: 600; font-size: 15px; }
+.back-link:hover { color: var(--text); }

@@ -108,7 +108,14 @@ export function apiRouter(ctx: Ctx): Router {
       id: sid,
       status: "complete",
       url: ctx.sessions.galleryUrl(sid),
-      event: { id: event.id, name: event.name, accentColor: event.accent_color, galleryEnabled: event.gallery_mode !== "disabled" },
+      event: {
+        id: event.id,
+        name: event.name,
+        accentColor: event.accent_color,
+        galleryEnabled: event.gallery_mode !== "disabled",
+        // Link back to the event-wide gallery, only when it is on (public or password).
+        galleryUrl: event.gallery_mode !== "disabled" ? `${base}/gallery/${event.id}` : null,
+      },
       capturedAt: session.captured_at ?? session.created_at,
       photos: ctx.sessions.photos(sid).map((p) => ({
         index: p.idx,

@@ -12,7 +12,11 @@ describe("gallery access", () => {
     await s.agent.get("/api/events/private-party").expect(404);
     await s.agent.get("/api/events/private-party/sessions").expect(404);
     await s.agent.get(`/s/${id}`).expect(200);
-    await s.agent.get(`/api/sessions/${id}`).expect(200);
+    const view = await s.agent.get(`/api/sessions/${id}`).expect(200);
+    expect(view.body.event.galleryUrl).toBeNull();   // no link to a gallery that is off
+    s.ctx.db.prepare(`UPDATE events SET gallery_mode = 'public' WHERE id = 'private-party'`).run();
+    const on = await s.agent.get(`/api/sessions/${id}`).expect(200);
+    expect(on.body.event.galleryUrl).toBe("https://photos.example.test/gallery/private-party");
   });
 
   it("honours PUBLIC_EVENT_GALLERY for new events", async () => {

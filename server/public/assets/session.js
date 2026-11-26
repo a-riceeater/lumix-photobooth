@@ -33,6 +33,11 @@
   function render() {
     show("content");
     $("event-name").textContent = data.event.name;
+    if (data.event.galleryUrl) {
+      $("event-gallery-link").href = data.event.galleryUrl;
+      $("event-gallery-name").textContent = data.event.name;
+      $("event-gallery-link").classList.remove("hidden");
+    }
     document.title = `Your photos · ${data.event.name}`;
     if (data.event.accentColor) document.documentElement.style.setProperty("--accent", data.event.accentColor);
 
