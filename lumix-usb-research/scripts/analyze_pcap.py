@@ -18,20 +18,26 @@ from collections import defaultdict
 
 TSHARK = r"C:\Program Files\Wireshark\tshark.exe"
 TYPES = {1: "CMD", 2: "DATA", 3: "RESP", 4: "EVENT"}
+TRUNCATED = [0]   # bytes missing from the capture because of snaplen (zero-padded)
 
 
 def packets(path: str):
     cmd = [TSHARK, "-r", path, "--disable-protocol", "usb-ptp", "-T", "fields",
            "-E", "separator=\t", "-e", "frame.number", "-e", "frame.time_relative",
            "-e", "usb.device_address", "-e", "usb.endpoint_address", "-e", "usb.capdata",
-           "usb.capdata"]
+           "-e", "frame.len", "-e", "frame.cap_len", "usb.capdata"]
     out = subprocess.run(cmd, capture_output=True, text=True, check=True).stdout
     for line in out.splitlines():
         f = line.split("\t")
         if len(f) < 5 or not f[4]:
             continue
         ep = int(f[3], 0) if f[3].startswith("0x") else int(f[3])
-        yield int(f[0]), float(f[1]), int(f[2]), ep, bytes.fromhex(f[4].replace(":", ""))
+        data = bytes.fromhex(f[4].replace(":", ""))
+        missing = int(f[5]) - int(f[6]) if len(f) >= 7 and f[5] and f[6] else 0
+        if missing > 0:   # truncated URB: pad so container framing stays in sync
+            TRUNCATED[0] += missing
+            data += bytes(missing)
+        yield int(f[0]), float(f[1]), int(f[2]), ep, data
 
 
 def containers(stream):
@@ -122,7 +128,8 @@ def main():
     ops = defaultdict(int)
     for tx in txs.values():
         ops[(tx.get("op", 0), tuple(tx.get("params", [])[:1]))] += 1
-    print(f"\n# device {dev}: {len(txs)} transactions, {len(events)} events")
+    print(f"\n# device {dev}: {len(txs)} transactions, {len(events)} events"
+          + (f"; WARNING {TRUNCATED[0]} bytes truncated by snaplen (zero-padded)" if TRUNCATED[0] else ""))
     for (op, p1), n in sorted(ops.items()):
         print(f"#   0x{op:04X} {('0x%08X' % p1[0]) if p1 else '':<10} x{n}")
 
