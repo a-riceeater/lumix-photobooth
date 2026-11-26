@@ -62,7 +62,8 @@ export function createApp(ctx: Ctx): Express {
   app.use("/api", apiRouter(ctx));
   app.use("/api", apiNotFound);
   app.use("/admin", adminPagesRouter(ctx));
-  app.use("/assets", express.static(path.join(PUBLIC_DIR, "assets"), { maxAge: "1h", index: false }));
+  // Revalidate on every load (cheap 304 via ETag) so updates show up immediately.
+  app.use("/assets", express.static(path.join(PUBLIC_DIR, "assets"), { maxAge: 0, index: false, etag: true, lastModified: true }));
   app.use(pagesRouter(ctx, PUBLIC_DIR));
   app.use((req, res) => {
     res.status(404).type("html").sendFile(path.join(PUBLIC_DIR, "404.html"));

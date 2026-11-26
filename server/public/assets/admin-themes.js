@@ -192,6 +192,8 @@
 
   $("new-theme").addEventListener("click", () => openBuilder(null));
   $("builder-cancel").addEventListener("click", closeBuilder);
+  $("builder-close").addEventListener("click", closeBuilder);
+  window.addEventListener("designs-reloaded", load);
   $("b-preset").addEventListener("change", () => {
     const v = $("b-preset").value;
     if (v === "custom") return;

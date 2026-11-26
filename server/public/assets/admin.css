@@ -90,3 +90,21 @@ body.admin .actions .btn { flex: 0 0 auto; }
 .facts dt { color: var(--muted); }
 .facts dd { margin: 0; }
 .actions.left { justify-content: flex-start; }
+
+/* builder preview: no broken-image icon before the first render */
+.preview-frame img:not([src]) { display: none; }
+.preview-frame:has(img:not([src]))::after { content: "Rendering preview…"; color: var(--muted); padding: 40px 0; }
+
+@media (max-width: 700px) {
+  .admin-bar { flex-wrap: wrap; padding: 8px 12px; gap: 6px 10px; }
+  .admin-bar .brand span { display: none; }
+  .tabs { order: 3; width: 100%; }
+  .tabs button { flex: 1; padding: 8px 6px; }
+  .admin-main { padding: 14px 12px; }
+  .compact-form { width: 100%; }
+  .compact-form input { width: auto !important; flex: 1 1 140px; }
+  .event-title { min-width: 0; flex: 1 1 100%; }
+  .chips { flex: 1 1 100%; }
+  .event-actions { flex-wrap: wrap; }
+  .facts { grid-template-columns: 1fr; }
+}
