@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Photo booth admin</title>
+  <link rel="stylesheet" href="/assets/style.css">
+  <script src="/assets/admin.js" defer></script>
+</head>
+<body>
+  <main class="wrap">
+    <p class="eyebrow">Photo booth</p>
+    <h1>Admin</h1>
+
+    <section id="login" class="card hidden">
+      <p class="error hidden" id="login-error">Wrong password.</p>
+      <form method="post" action="/admin/login">
+        <label for="password">Admin password</label>
+        <input id="password" name="password" type="password" autocomplete="current-password" required autofocus>
+        <div class="actions"><button class="btn primary" type="submit">Sign in</button></div>
+      </form>
+    </section>
+
+    <div id="app" class="hidden">
+      <div class="actions">
+        <button class="btn" id="reload-designs" type="button">Reload designs</button>
+        <button class="btn" id="retry-emails" type="button">Retry failed emails</button>
+        <form method="post" action="/admin/logout"><button class="btn" type="submit">Sign out</button></form>
+      </div>
+      <p class="muted" id="summary"></p>
+      <div id="design-problems"></div>
+
+      <h2>New event</h2>
+      <form class="inline" id="new-event">
+        <div><label for="ne-id">Event id (slug)</label><input id="ne-id" pattern="[a-z0-9-]+" required placeholder="summer-party-2026"></div>
+        <div><label for="ne-name">Name</label><input id="ne-name" required placeholder="Summer Party 2026"></div>
+        <button class="btn primary" type="submit">Create</button>
+      </form>
+      <p class="muted">Events are also created automatically when the booth uploads its first session.</p>
+
+      <h2>Events</h2>
+      <div id="events"></div>
+    </div>
+  </main>
+  <template id="event-tpl">
+    <section class="card">
+      <h2 class="ev-title"></h2>
+      <p class="muted ev-stats"></p>
+      <form class="inline ev-form">
+        <div><label>Name</label><input name="name" required></div>
+        <div><label>Event gallery</label>
+          <select name="galleryMode">
+            <option value="disabled">Disabled</option>
+            <option value="public">Public</option>
+            <option value="password">Password protected</option>
+          </select></div>
+        <div><label>New gallery password</label><input name="galleryPassword" type="password" autocomplete="new-password" placeholder="unchanged"></div>
+        <div><label>Accent color</label><input name="accentColor" placeholder="#18181b"></div>
+        <div><label>Default design</label><select name="defaultDesign"></select></div>
+        <button class="btn primary" type="submit">Save</button>
+      </form>
+      <p class="ev-msg muted"></p>
+      <div class="actions">
+        <a class="btn ev-gallery" target="_blank" rel="noopener">Open event gallery</a>
+        <button class="btn ev-sessions" type="button">Show sessions</button>
+        <button class="btn ev-delete" type="button">Delete event…</button>
+      </div>
+      <div class="scroll-x ev-table"></div>
+    </section>
+  </template>
+</body>
+</html>
