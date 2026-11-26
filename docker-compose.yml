@@ -1,0 +1,26 @@
+# Optional: run the server with Docker Compose.
+#   cp server/.env.example server/.env   # then fill in secrets (or: cd server && npm run init-env)
+#   docker compose up -d --build
+services:
+  photobooth:
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    env_file: server/.env
+    environment:
+      # Paths inside the container; override the values from .env.
+      DATA_DIR: /data
+      DESIGNS_DIR: /app/designs
+      # PHOTOS_DIR: /photos   # uncomment together with the volume below
+    ports:
+      - "8080:8080"
+    volumes:
+      - photobooth-data:/data
+      # Edit designs without rebuilding the image:
+      - ./designs:/app/designs:ro
+      # Keep photos on a different disk:
+      # - /mnt/bigdisk/photobooth-photos:/photos
+
+volumes:
+  photobooth-data:

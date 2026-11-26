@@ -1,0 +1,8 @@
+# Caddy reverse proxy with automatic HTTPS.
+# server/.env: PUBLIC_BASE_URL=https://photos.example.com and TRUST_PROXY=1
+photos.example.com {
+	request_body {
+		max_size 60MB
+	}
+	reverse_proxy 127.0.0.1:8080
+}

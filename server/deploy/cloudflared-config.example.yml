@@ -1,0 +1,15 @@
+# Cloudflare Tunnel example (~/.cloudflared/config.yml).
+#   cloudflared tunnel login
+#   cloudflared tunnel create photobooth
+#   cloudflared tunnel route dns photobooth photos.example.com
+#   cloudflared tunnel run photobooth
+# Then in server/.env: PUBLIC_BASE_URL=https://photos.example.com and TRUST_PROXY=1
+tunnel: photobooth
+credentials-file: /home/USER/.cloudflared/<tunnel-id>.json
+ingress:
+  - hostname: photos.example.com
+    service: http://localhost:8080
+    originRequest:
+      # Large photo uploads over slow connections.
+      connectTimeout: 30s
+  - service: http_status:404

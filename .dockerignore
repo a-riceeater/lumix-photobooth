@@ -1,0 +1,9 @@
+**/node_modules
+**/.DS_Store
+server/dist
+server/data
+server/.env
+ios
+lumix-usb-research
+designs/**/out
+.git
