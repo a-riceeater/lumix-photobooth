@@ -229,3 +229,82 @@ export function loadDesign(dir: string): { design: Design | null; errors: string
   design.fingerprint = h.digest("hex").slice(0, 12);
   return { design, errors, warnings };
 }
+
+/**
+ * All valid designs in DESIGNS_DIR. Rescans lazily (at most every
+ * `rescanMs`), so dropping a new folder in is enough to register it; call
+ * reload() (admin UI, CLI, SIGHUP) to pick changes up immediately.
+ */
+export class DesignRegistry {
+  private designs = new Map<string, Design>();
+  private problems: DesignProblem[] = [];
+  private lastScan = 0;
+
+  constructor(readonly dir: string, private readonly rescanMs = 10_000) {
+    this.reload();
+  }
+
+  reload(): { loaded: number; problems: DesignProblem[] } {
+    const next = new Map<string, Design>();
+    const problems: DesignProblem[] = [];
+    let entries: fs.Dirent[] = [];
+    try {
+      entries = fs.readdirSync(this.dir, { withFileTypes: true });
+    } catch {
+      log.warn("designs directory not found", { dir: this.dir });
+    }
+    for (const e of entries.sort((a, b) => a.name.localeCompare(b.name))) {
+      if (!e.isDirectory() || e.name.startsWith(".") || e.name.startsWith("_")) continue;
+      const folder = path.join(this.dir, e.name);
+      if (!fs.existsSync(path.join(folder, "design.json"))) continue;
+      const { design, errors, warnings } = loadDesign(folder);
+      if (design) next.set(design.id, design);
+      if (errors.length || warnings.length) problems.push({ id: e.name, dir: folder, errors, warnings });
+    }
+    for (const p of problems.filter((p) => p.errors.length)) {
+      log.warn(`design "${p.id}" skipped`, { errors: p.errors });
+    }
+    this.designs = next;
+    this.problems = problems;
+    this.lastScan = Date.now();
+    return { loaded: next.size, problems };
+  }
+
+  private fresh(): void {
+    if (Date.now() - this.lastScan > this.rescanMs) this.reload();
+  }
+
+  list(): Design[] {
+    this.fresh();
+    return [...this.designs.values()];
+  }
+
+  /** Designs usable for a session with `photoCount` photos. */
+  compatible(photoCount: number): Design[] {
+    return this.list().filter((d) => d.photoCount === photoCount);
+  }
+
+  get(id: string): Design | undefined {
+    this.fresh();
+    return this.designs.get(id);
+  }
+
+  getProblems(): DesignProblem[] {
+    this.fresh();
+    return this.problems;
+  }
+}
+
+/** Public JSON shape (no filesystem paths). */
+export function designSummary(d: Design) {
+  return {
+    id: d.id,
+    name: d.name,
+    description: d.description,
+    version: d.version,
+    width: d.width,
+    height: d.height,
+    photoCount: d.photoCount,
+    hasPreview: Boolean(d.preview),
+  };
+}
