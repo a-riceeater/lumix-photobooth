@@ -55,10 +55,11 @@ final class LumixWiFiCameraService: CameraService {
     func stop() async {
         running = false
         superviseTask?.cancel()
-        keepaliveTask?.cancel()
+        // Stop the stream first (while the session is still alive), then the keepalive.
         if let c = client, streaming, await c.haltReason == nil {
-            _ = try? await c.command("mode=stopstream", timeout: 4)
+            _ = try? await operation.withLock { try await c.command("mode=stopstream", timeout: 4) }
         }
+        keepaliveTask?.cancel()
         streaming = false
         receiver.stop()
         client = nil
@@ -268,6 +269,8 @@ final class LumixWiFiCameraService: CameraService {
                             try await self.startStream(c)
                         }
                     }
+                } catch is CancellationError {
+                    return
                 } catch {
                     misses += 1
                     if await c.haltReason != nil || misses >= 3 {

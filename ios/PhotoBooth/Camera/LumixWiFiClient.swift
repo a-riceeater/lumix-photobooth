@@ -66,6 +66,10 @@ actor LumixWiFiClient {
             } catch let e as LumixWiFiError {
                 throw e
             } catch {
+                // Our own cancellation (stop/reconnect) is not a camera fault.
+                if error is CancellationError || (error as? URLError)?.code == .cancelled || Task.isCancelled {
+                    throw CancellationError()
+                }
                 let tolerated = (tolerateTimeoutsUntil.map { Date() < $0 } ?? false)
                 let ms = Int(Date().timeIntervalSince(started) * 1000)
                 if !tolerated { halt("\(label) failed after \(ms) ms: \(error.localizedDescription)") }
