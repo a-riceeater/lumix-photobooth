@@ -295,7 +295,7 @@ class Camera:
         return current, options
 
     def set_liveview_setting(self, s: LiveviewSetting) -> Response:
-        return self.t.write(POC.SetLiveviewParams, s.pack(), LV_CURRENT).check()
+        return self._write_retry(POC.SetLiveviewParams, s.pack(), LV_CURRENT).check()
 
     def liveview_start(self) -> Response:
         r = self.t.command(POC.Liveview, LV_START).check()
