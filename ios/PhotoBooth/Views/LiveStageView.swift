@@ -20,6 +20,11 @@ struct LiveStageView: View {
                 CountdownOverlay(shot: shot, total: booth.totalShots, remaining: remaining, message: booth.retryMessage)
             case .capturing(let shot):
                 CaptureOverlay(shot: shot, total: booth.totalShots)
+            case .showingShot(let shot):
+                if shot < booth.thumbnails.count {
+                    ShotPreviewOverlay(image: booth.thumbnails[shot], shot: shot, total: booth.totalShots)
+                        .transition(.scale(scale: 0.9).combined(with: .opacity))
+                }
             case .problem(let message):
                 ProblemOverlay(message: message) { booth.finish() }
                     .transition(.opacity)
@@ -27,7 +32,7 @@ struct LiveStageView: View {
                 EmptyView()
             }
 
-            if booth.phase != .welcome, !booth.thumbnails.isEmpty {
+            if booth.phase != .welcome, !isShowingShot(booth.phase), !booth.thumbnails.isEmpty {
                 VStack {
                     Spacer()
                     ShotStrip(images: booth.thumbnails, total: booth.totalShots)
@@ -36,6 +41,36 @@ struct LiveStageView: View {
                 .allowsHitTesting(false)
             }
         }
+    }
+}
+
+private func isShowingShot(_ p: BoothController.Phase) -> Bool {
+    if case .showingShot = p { return true }
+    return false
+}
+
+/// The photo just taken, large, before the next countdown.
+private struct ShotPreviewOverlay: View {
+    let image: CGImage
+    let shot: Int
+    let total: Int
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Image(decorative: image, scale: 1)
+                .resizable()
+                .aspectRatio(contentMode: .fit)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
+                .overlay(RoundedRectangle(cornerRadius: 16).stroke(.white, lineWidth: 6))
+                .shadow(radius: 20)
+                .padding(.horizontal, 32)
+            Text(shot + 1 < total ? "Nice! Get ready for photo \(shot + 2)…" : "That's a wrap!")
+                .font(.title.weight(.bold))
+                .foregroundStyle(.white)
+        }
+        .padding(.vertical, 40)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.black.opacity(0.75))
     }
 }
 
@@ -53,7 +88,9 @@ private struct WelcomeOverlay: View {
                     .multilineTextAlignment(.center)
                     .minimumScaleFactor(0.5)
                     .lineLimit(2)
-                Text("We'll take \(model.booth.totalShots) photo\(model.booth.totalShots == 1 ? "" : "s") — get ready to pose!")
+                Text(s.welcomeMessage.isEmpty
+                     ? "We'll take \(model.booth.totalShots) photo\(model.booth.totalShots == 1 ? "" : "s") — get ready to pose!"
+                     : s.welcomeMessage)
                     .font(.title3.weight(.medium))
                     .opacity(0.9)
             }

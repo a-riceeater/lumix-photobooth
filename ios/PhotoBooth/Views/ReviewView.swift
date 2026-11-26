@@ -25,7 +25,7 @@ struct ReviewView: View {
                 .padding(.horizontal, 24)
 
                 HStack(spacing: 20) {
-                    if model.settings.allowRetake {
+                    if booth.canRetake {
                         Button {
                             booth.retake()
                         } label: {
