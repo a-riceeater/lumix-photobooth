@@ -45,8 +45,12 @@ struct DiagnosticsView: View {
                     Task {
                         let start = Date()
                         do {
-                            let data = try await cam.capture()
-                            testResult = String(format: "OK: %.1f MB in %.2f s", Double(data.count) / 1_048_576, Date().timeIntervalSince(start))
+                            switch try await cam.capture() {
+                            case .jpeg(let data):
+                                testResult = String(format: "OK: %.1f MB in %.2f s", Double(data.count) / 1_048_576, Date().timeIntervalSince(start))
+                            case .storedOnCamera:
+                                testResult = String(format: "OK: saved on the camera's card in %.2f s (Wi-Fi photos are fetched after a session)", Date().timeIntervalSince(start))
+                            }
                         } catch {
                             testResult = "Failed: \((error as? LocalizedError)?.errorDescription ?? "\(error)")"
                         }

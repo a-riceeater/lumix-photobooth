@@ -25,6 +25,9 @@ struct LiveStageView: View {
                     ShotPreviewOverlay(image: booth.thumbnails[shot], shot: shot, total: booth.totalShots)
                         .transition(.scale(scale: 0.9).combined(with: .opacity))
                 }
+            case .transferring(let received, let total):
+                TransferOverlay(received: received, total: total)
+                    .transition(.opacity)
             case .problem(let message):
                 ProblemOverlay(message: message) { booth.finish() }
                     .transition(.opacity)
@@ -149,6 +152,31 @@ private struct CountdownOverlay: View {
             .accessibilityElement(children: .combine)
             .accessibilityLabel("Photo \(shot + 1) of \(total) in \(remaining)")
         }
+    }
+}
+
+/// Wi-Fi camera: fetching the session's photos from the card.
+private struct TransferOverlay: View {
+    let received: Int
+    let total: Int
+
+    var body: some View {
+        VStack(spacing: 20) {
+            ProgressView(value: Double(received), total: Double(max(total, 1)))
+                .progressViewStyle(.linear)
+                .tint(.white)
+                .frame(maxWidth: 360)
+            Text("Bringing your photos over…")
+                .font(.system(size: 34, weight: .bold, design: .rounded))
+            Text("\(received) of \(total)")
+                .font(.title2.monospacedDigit())
+                .opacity(0.8)
+        }
+        .foregroundStyle(.white)
+        .padding(40)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.black.opacity(0.75))
+        .accessibilityElement(children: .combine)
     }
 }
 

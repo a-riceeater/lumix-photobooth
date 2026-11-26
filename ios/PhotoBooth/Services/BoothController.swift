@@ -14,6 +14,8 @@ final class BoothController {
         case capturing(shot: Int)
         /// The photo just taken, shown fullscreen for a moment.
         case showingShot(shot: Int)
+        /// Wi-Fi camera: photos are being fetched from the camera's card.
+        case transferring(received: Int, total: Int)
         case review
         case share
         case problem(String)
@@ -115,6 +117,7 @@ final class BoothController {
     // MARK: Flow
 
     private func runCapture(newSession: Bool) async {
+        pendingOnCamera.removeAll()
         if newSession {
             guard camera.state.isReady else {
                 await showProblem("The camera is getting ready. Please try again in a moment.")
@@ -146,7 +149,7 @@ final class BoothController {
                 let cue = clock.now + unit * max(1, countdown)
                 let shutterAt = cue - seconds(Double(settings.shutterLeadMilliseconds) / 1000)
                 let focusAt = shutterAt - seconds(cam.focusLeadTime)
-                let captureTask = Task { () throws -> Data in
+                let captureTask = Task { () throws -> CaptureResult in
                     try await clock.sleep(until: max(focusAt, clock.now))
                     try await cam.prepareCapture()
                     try await clock.sleep(until: max(shutterAt, clock.now))
@@ -162,9 +165,16 @@ final class BoothController {
                 playSound(.shutter)
                 if settings.flashEffect { flashCounter += 1 }
                 do {
-                    let jpeg = try await captureTask.value
-                    try await store.addPhoto(sessionId: id, index: shot, jpeg: jpeg)
-                    if let t = await Self.thumbnail(jpeg) { thumbnails.append(t) }
+                    switch try await captureTask.value {
+                    case .jpeg(let jpeg):
+                        try await store.addPhoto(sessionId: id, index: shot, jpeg: jpeg)
+                        if let t = await Self.thumbnail(jpeg) { thumbnails.append(t) }
+                    case .storedOnCamera:
+                        // Fetched after the last shot; until then show the
+                        // live-view frame from the moment of capture.
+                        pendingOnCamera.append(shot)
+                        if let frame = camera.preview.image { thumbnails.append(frame) }
+                    }
                     retryMessage = nil
                     break
                 } catch {
@@ -194,12 +204,58 @@ final class BoothController {
             }
         }
 
+        if !pendingOnCamera.isEmpty {
+            guard await transferPhotosFromCamera(sessionId: id) else { return }
+        }
+
         if canRetake {
             enter(.review, timeout: settings.reviewTimeoutSeconds) { [weak self] in self?.accept() }
         } else {
             phase = .review
             accept()
         }
+    }
+
+    /// Shots taken by a Wi-Fi camera that still have to be fetched.
+    private var pendingOnCamera: [Int] = []
+
+    /// Fetches the session's photos from the camera, stores them, rebuilds the
+    /// thumbnails. On failure the photos stay safe on the camera's card.
+    private func transferPhotosFromCamera(sessionId id: String) async -> Bool {
+        let shots = pendingOnCamera
+        pendingOnCamera.removeAll()
+        phase = .transferring(received: 0, total: shots.count)
+        var lastError: Error?
+        for _ in 0..<2 {
+            do {
+                let photos = try await camera.collectPhotos(count: shots.count) { [weak self] received in
+                    self?.phase = .transferring(received: received, total: shots.count)
+                }
+                guard photos.count == shots.count else { throw CaptureError.noImage }
+                for (k, shot) in shots.enumerated() {
+                    try await store.addPhoto(sessionId: id, index: shot, jpeg: photos[k])
+                }
+                var rebuilt: [CGImage] = []
+                if let s = store.session(id) {
+                    for p in s.photos.sorted(by: { $0.index < $1.index }) {
+                        if let data = try? Data(contentsOf: store.photoURL(s, index: p.index)), let t = await Self.thumbnail(data) { rebuilt.append(t) }
+                    }
+                }
+                thumbnails = rebuilt
+                return true
+            } catch {
+                lastError = error
+                if Task.isCancelled { return false }
+            }
+        }
+        if store.session(id)?.photos.isEmpty == false {
+            try? store.finalize(sessionId: id)
+            uploads.trigger()
+        }
+        currentSessionId = nil
+        _ = lastError
+        await showProblem("Your photos are safe on the camera, but we couldn't bring them over. Please ask the booth host for help.")
+        return false
     }
 
     private func showProblem(_ message: String) async {

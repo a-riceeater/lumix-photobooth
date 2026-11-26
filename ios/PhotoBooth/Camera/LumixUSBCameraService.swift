@@ -238,7 +238,7 @@ final class LumixUSBCameraService: CameraService {
         }
     }
 
-    func capture() async throws -> Data {
+    func capture() async throws -> CaptureResult {
         guard let cam = camera, state.isReady else { throw CaptureError.notConnected }
         let useAF = preferences().options.autofocusBeforeCapture && !prepared
         prepared = false
@@ -249,7 +249,7 @@ final class LumixUSBCameraService: CameraService {
         do {
             let data = try await cam.captureWithAutofocus(useAF)
             log.add(String(format: "capture: %d bytes in %.2f s", data.count, Date().timeIntervalSince(started)))
-            return data
+            return .jpeg(data)
         } catch let error as CaptureError {
             log.add("capture failed: \(describe(error))")
             throw error

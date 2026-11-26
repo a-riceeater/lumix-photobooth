@@ -53,6 +53,7 @@ final class AppModel {
         switch kind {
         case .mock: return MockCameraService(preferences: { [weak settings] in settings?.cameraPreferences ?? CameraPreferences() })
         case .lumixUSB: return LumixUSBCameraService(preferences: { [weak settings] in settings?.cameraPreferences ?? CameraPreferences() })
+        case .lumixWiFi: return LumixWiFiCameraService(preferences: { [weak settings] in settings?.cameraPreferences ?? CameraPreferences() })
         }
     }
 

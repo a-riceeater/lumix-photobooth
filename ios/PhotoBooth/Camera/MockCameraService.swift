@@ -148,7 +148,21 @@ final class MockCameraService: CameraService {
         try await Task.sleep(nanoseconds: 300_000_000)
     }
 
-    func capture() async throws -> Data {
+    @ObservationIgnored private var deferred: [Data] = []
+
+    func collectPhotos(count: Int, progress: @escaping @MainActor (Int) -> Void) async throws -> [Data] {
+        var out: [Data] = []
+        for (i, d) in deferred.suffix(count).enumerated() {
+            try await Task.sleep(nanoseconds: 300_000_000)   // models the Wi-Fi download
+            out.append(d)
+            progress(i + 1)
+        }
+        deferred.removeAll()
+        log.add("mock: delivered \(out.count) photo(s) after the session")
+        return out
+    }
+
+    func capture() async throws -> CaptureResult {
         guard state.isReady else { throw CaptureError.notConnected }
         guard !capturing else { throw CaptureError.busy }
         capturing = true
@@ -170,6 +184,10 @@ final class MockCameraService: CameraService {
         }.value
         guard let data else { throw CaptureError.invalidImage }
         log.add("mock capture #\(n): \(data.count) bytes")
-        return data
+        if prefs.mockDeferredDelivery {
+            deferred.append(data)
+            return .storedOnCamera
+        }
+        return .jpeg(data)
     }
 }

@@ -7,12 +7,14 @@ import Observation
 enum CameraKind: String, CaseIterable, Codable, Identifiable {
     case mock
     case lumixUSB
+    case lumixWiFi
 
     var id: String { rawValue }
     var label: String {
         switch self {
         case .mock: return "Mock camera (no hardware)"
         case .lumixUSB: return "LUMIX S5II over USB"
+        case .lumixWiFi: return "LUMIX S5II over Wi-Fi"
         }
     }
 }
@@ -92,8 +94,16 @@ final class DiagnosticsLog {
     func clear() { entries.removeAll() }
 }
 
+/// Result of one shot. Over USB the JPEG arrives immediately; over Wi-Fi the
+/// photo is written to the camera's card and fetched after the session's last
+/// shot with `collectPhotos(count:progress:)`.
+enum CaptureResult: Equatable {
+    case jpeg(Data)
+    case storedOnCamera
+}
+
 /// What the booth needs from a camera, independent of transport (USB,
-/// a future Wi-Fi transport, or the mock).
+/// Wi-Fi, or the mock).
 @MainActor
 protocol CameraService: AnyObject {
     var kind: CameraKind { get }
@@ -110,15 +120,29 @@ protocol CameraService: AnyObject {
     /// Optional first half of a timed capture (autofocus), so the shutter can
     /// fire exactly on cue. A following `capture()` then skips its own AF.
     func prepareCapture() async throws
-    /// Full-resolution JPEG of one new photo (fires the shutter immediately).
-    func capture() async throws -> Data
+    /// Fires the shutter immediately; returns the full-resolution JPEG, or
+    /// `.storedOnCamera` for cameras that deliver photos after the session.
+    func capture() async throws -> CaptureResult
+    /// Full-resolution JPEGs of the newest `count` photos, oldest first
+    /// (only for cameras whose capture returns `.storedOnCamera`).
+    func collectPhotos(count: Int, progress: @escaping @MainActor (Int) -> Void) async throws -> [Data]
     /// Drops and re-establishes the connection (operator action).
     func reconnect()
+}
+
+extension CameraService {
+    func collectPhotos(count: Int, progress: @escaping @MainActor (Int) -> Void) async throws -> [Data] { [] }
 }
 
 /// Camera options derived from operator settings.
 struct CameraPreferences: Equatable {
     var options = CameraOptions()
     var mockFailureRate: Double = 0
+    /// Mock behaves like the Wi-Fi camera: photos are delivered after the session.
+    var mockDeferredDelivery = false
+    /// Wi-Fi: fixed camera address (empty = find it on the network).
+    var wifiHost = ""
+    /// Wi-Fi: name shown on the camera's connect prompt.
+    var wifiClientName = "Photo Booth"
     var mockCaptureSize = CGSize(width: 3000, height: 2000)
 }
