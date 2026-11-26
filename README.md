@@ -162,7 +162,10 @@ app; refusals are never retried), switches it to shooting mode and shows its 30 
 taken with `camcmd capture` (~2 s until it is on the card); after the session's last shot the booth shows
 "Bringing your photos over…", switches the camera to playback, finds the newest photos through the camera's DLNA
 ContentDirectory and downloads the full-resolution originals (~3.5 s per 9 MB photo), then returns it to
-shooting mode. Any `err_busy` or unexpected timeout stops all camera traffic until the operator checks the
+shooting mode. With *Show quick previews first* (on by default) the booth first fetches the camera's own
+1620×1080 previews (~1 s for three), so guests see their real photos about 4 s after the last shot, and the
+originals finish in the background (~7 s) while they look at the review and QR screens; the next guest can start
+once those are saved. Any `err_busy` or unexpected timeout stops all camera traffic until the operator checks the
 camera and taps *Reconnect* — two research probes locked the camera before these rules existed. The recipe and
 every measurement are in [docs/lan-research-log.md](docs/lan-research-log.md); it was verified end to end on the
 S5II with the app's own Swift code (compiled into a macOS harness), not yet inside the iOS app on a device.

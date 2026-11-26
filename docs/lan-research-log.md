@@ -113,3 +113,17 @@ collect: stopstream → playmode ok (1235 ms) → get_content_info (17 ms)
 
 All three files: 6000×4000, Model DC-S5M2. `stopstream` and `setsetting device_name`
 (with the session header) are verified too.
+
+## Session 4 — quick previews (`DL….JPG`), app code via the harness
+
+```
+READY 4.21 s → 3 captures (card write 1.9–2.3 s each)
+collectPreviews(3): stopstream (518 ms) → playmode (1177 ms) → get_content_info (15 ms)
+   → Browse 17+1, 18+1, 19+1 (64–73 ms) → GET DL11542453/54/55.JPG: 706–720 KB, 316–469 ms each
+   = previews in 4.10 s (downloads 1.12 s)
+collectOriginals(): GET DO…JPG ×3, 24.6 MB in 6.8 s → recmode ok (497 ms) → startstream ok → 30.5 fps
+```
+
+* `DL….JPG` (protocolInfo `JPEG_MED` / `CAM_LRGTN`) is a **1620×1080** JPEG of ~700 KB on the S5II,
+  although the listing's `size` attribute says `100000`. The originals were 6000×4000.
+* Guests can see their real photos ~4 s after the last shot; the originals follow in ~7 s.

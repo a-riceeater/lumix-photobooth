@@ -395,7 +395,7 @@ final class LumixWiFiCameraService: CameraService {
             var previews: [Data] = []
             for item in items {
                 guard let url = item.previewURL,
-                      let data = try? await c.download(url, expectedBytes: 200_000),
+                      let data = try? await c.download(url, expectedBytes: 1_000_000),
                       data.count > 3, data[data.startIndex] == 0xFF, data[data.startIndex + 1] == 0xD8 else {
                     log.add("quick previews unavailable — waiting for the originals instead")
                     if await c.haltReason != nil { await fail(c, LumixWiFiError.halted(await c.haltReason ?? ""), during: "previews") }

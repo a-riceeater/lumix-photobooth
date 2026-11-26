@@ -125,7 +125,7 @@ struct CameraContentItem: Equatable {
     var size: Int
     /// Full-resolution JPEG, e.g. http://10.0.0.177:50001/DO11542445.JPG
     var jpegURL: URL
-    /// Camera-made ~100 KB preview (DL….JPG, PANASONIC.COM_PN=CAM_LRGTN), if listed.
+    /// Camera-made preview (DL….JPG, CAM_LRGTN): 1620×1080, ~700 KB on the S5II (the listing says 100000).
     var previewURL: URL? = nil
 }
 
