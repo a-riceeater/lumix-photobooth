@@ -5,25 +5,25 @@ import { randomBytes } from "node:crypto";
 import { isEventId, isSessionId } from "./ids.js";
 
 /**
- * Filesystem layout:
- *   DATA_DIR/events/<eventId>/sessions/<sessionId>/{originals,thumbnails,generated}
+ * Filesystem layout (PHOTOS_DIR defaults to DATA_DIR/events):
+ *   PHOTOS_DIR/<eventId>/sessions/<sessionId>/{originals,thumbnails,generated}
+ *   PHOTOS_DIR/.tmp/   staging files (same filesystem, so link/rename is atomic)
  * Every path is built from validated IDs only, and the result is checked to be
- * inside DATA_DIR, so request input can never escape it.
+ * inside PHOTOS_DIR, so request input can never escape it.
  */
 export class Storage {
   readonly root: string;
   readonly tmpDir: string;
 
-  constructor(dataDir: string) {
-    this.root = path.resolve(dataDir);
-    this.tmpDir = path.join(this.root, "tmp");
-    fs.mkdirSync(path.join(this.root, "events"), { recursive: true });
+  constructor(photosDir: string) {
+    this.root = path.resolve(photosDir);
+    this.tmpDir = path.join(this.root, ".tmp");
     fs.mkdirSync(this.tmpDir, { recursive: true });
   }
 
   sessionDir(eventId: string, sessionId: string): string {
     if (!isEventId(eventId) || !isSessionId(sessionId)) throw new Error("invalid id");
-    return this.inside(path.join(this.root, "events", eventId, "sessions", sessionId));
+    return this.inside(path.join(this.root, eventId, "sessions", sessionId));
   }
 
   originalsDir(eventId: string, sessionId: string): string {
@@ -50,7 +50,7 @@ export class Storage {
   private inside(p: string): string {
     const resolved = path.resolve(p);
     if (resolved !== this.root && !resolved.startsWith(this.root + path.sep)) {
-      throw new Error("path escapes data directory");
+      throw new Error("path escapes photos directory");
     }
     return resolved;
   }
@@ -92,7 +92,7 @@ export class Storage {
 
   async removeEvent(eventId: string): Promise<void> {
     if (!isEventId(eventId)) throw new Error("invalid id");
-    await fsp.rm(this.inside(path.join(this.root, "events", eventId)), { recursive: true, force: true });
+    await fsp.rm(this.inside(path.join(this.root, eventId)), { recursive: true, force: true });
   }
 
   /** Deletes stale temp files left by a crash. */

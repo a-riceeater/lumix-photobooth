@@ -17,6 +17,8 @@ export interface AppConfig {
   publicBaseUrl: string;
   trustProxy: number;
   dataDir: string;
+  /** Where event/session photo folders live (default DATA_DIR/events). */
+  photosDir: string;
   designsDir: string;
   deviceApiKey: string;
   adminPassword: string;
@@ -97,6 +99,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, baseDir = proce
     };
   }
 
+  const dataDir = path.resolve(baseDir, env.DATA_DIR?.trim() || "./data");
+
   const logLevel = (env.LOG_LEVEL?.trim() || "info") as AppConfig["logLevel"];
   if (!["debug", "info", "warn", "error"].includes(logLevel)) errors.push("LOG_LEVEL must be debug, info, warn or error");
 
@@ -105,7 +109,8 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env, baseDir = proce
     host: env.HOST?.trim() || "0.0.0.0",
     publicBaseUrl,
     trustProxy: attempt(() => int(env, "TRUST_PROXY", 0, 0, 10), 0),
-    dataDir: path.resolve(baseDir, env.DATA_DIR?.trim() || "./data"),
+    dataDir,
+    photosDir: path.resolve(baseDir, env.PHOTOS_DIR?.trim() || path.join(dataDir, "events")),
     designsDir: path.resolve(baseDir, env.DESIGNS_DIR?.trim() || "../designs"),
     deviceApiKey,
     adminPassword,
