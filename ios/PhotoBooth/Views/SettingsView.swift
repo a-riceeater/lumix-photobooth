@@ -80,7 +80,7 @@ struct SettingsView: View {
                 } header: {
                     Text("Storage")
                 } footer: {
-                    Text("Photos are only ever deleted after the server has verified its copy. They are also visible in the Files app under On My iPhone/iPad ▸ Photo Booth.")
+                    Text("Photos are only ever deleted after the server has verified its copy. They are also visible in the Files app under On My iPhone/iPad ▸ Lumix Booth.")
                 }
                 Section {
                     SecureField("New PIN (4–8 digits)", text: $newPIN).keyboardType(.numberPad)

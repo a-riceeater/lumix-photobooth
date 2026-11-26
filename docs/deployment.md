@@ -104,7 +104,7 @@ rsync -a --exclude .tmp "$PHOTOS_DIR"/ backup-host:/backups/photobooth-photos/
 ```
 
 The iPad/iPhone also keeps every photo locally until the server has verified it (and longer, depending on the
-retention setting); photos are visible in Files ▸ On My iPad ▸ Photo Booth ▸ Sessions.
+retention setting); photos are visible in Files ▸ On My iPad ▸ Lumix Booth ▸ Sessions.
 
 ### Restore
 
