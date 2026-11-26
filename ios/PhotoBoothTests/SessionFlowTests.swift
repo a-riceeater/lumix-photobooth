@@ -305,6 +305,7 @@ final class SessionFlowTests: XCTestCase {
 
     func testPhotosDeliveredAfterTheSessionLikeWiFi() async throws {
         settings.photosPerSession = 3
+        settings.wifiQuickPreviews = false
         settings.allowRetake = true
         let store = SessionStore(root: root)
         let uploads = UploadQueue(store: store, settings: settings, urlSession: FakeServer.urlSession())
@@ -324,6 +325,33 @@ final class SessionFlowTests: XCTestCase {
         let id = try XCTUnwrap(booth.currentSessionId)
         XCTAssertEqual(store.session(id)?.photos.map(\.index), [0, 1, 2], "all photos stored locally before upload")
         XCTAssertEqual(booth.thumbnails.count, 3)
+        await cam.stop()
+    }
+
+    func testQuickPreviewsThenOriginalsInTheBackground() async throws {
+        settings.photosPerSession = 3
+        settings.wifiQuickPreviews = true
+        let store = SessionStore(root: root)
+        let uploads = UploadQueue(store: store, settings: settings, urlSession: FakeServer.urlSession())
+        let cam = MockCameraService(preferences: { CameraPreferences(mockDeferredDelivery: true, mockCaptureSize: CGSize(width: 300, height: 200)) })
+        cam.start()
+        try await Task.sleep(nanoseconds: 700_000_000)
+        let booth = BoothController(settings: settings, store: store, uploads: uploads, camera: { cam })
+        booth.tick = 10_000_000
+        booth.start()
+        for _ in 0..<400 where booth.phase != .review { try await Task.sleep(nanoseconds: 5_000_000) }
+        XCTAssertEqual(booth.phase, .review)
+        let id = try XCTUnwrap(booth.currentSessionId)
+        XCTAssertEqual(booth.thumbnails.count, 3, "real previews shown before the originals arrive")
+        XCTAssertLessThan(store.session(id)?.photos.count ?? 0, 3, "originals still downloading in the background")
+        XCTAssertFalse(cam.state.isReady, "the next guest waits until the originals are saved")
+
+        booth.accept()   // share screen right away; finalize happens after the originals
+        XCTAssertEqual(booth.phase, .share)
+        for _ in 0..<400 where store.session(id)?.state != .ready { try await Task.sleep(nanoseconds: 10_000_000) }
+        XCTAssertEqual(store.session(id)?.state, .ready)
+        XCTAssertEqual(store.session(id)?.photos.map(\.index), [0, 1, 2])
+        XCTAssertTrue(cam.state.isReady)
         await cam.stop()
     }
 

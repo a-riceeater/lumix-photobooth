@@ -70,15 +70,21 @@ final class BoothController {
         retakesUsed += 1
         timerTask?.cancel()
         autoAdvanceRemaining = nil
-        try? store.discardPhotosForRetake(sessionId: id)
-        thumbnails.removeAll()
-        flowTask = Task { await runCapture(newSession: false) }
+        flowTask = Task {
+            // The camera can't shoot until the previous originals are saved.
+            if let pending = originalsTask {
+                phase = .transferring(received: 0, total: max(1, thumbnails.count))
+                _ = await pending.value
+            }
+            try? store.discardPhotosForRetake(sessionId: id)
+            thumbnails.removeAll()
+            await runCapture(newSession: false)
+        }
     }
 
     func accept() {
         guard phase == .review, let id = currentSessionId else { return }
-        try? store.finalize(sessionId: id)
-        uploads.trigger()
+        finalizeWhenPhotosSaved(id)
         enter(.share, timeout: settings.resetTimeoutSeconds) { [weak self] in self?.finish() }
     }
 
@@ -103,7 +109,7 @@ final class BoothController {
         timerTask?.cancel()
         autoAdvanceRemaining = nil
         // Safety net: never leave a captured session un-queued.
-        if let id = currentSessionId, store.session(id)?.state == .capturing { try? store.finalize(sessionId: id) }
+        if let id = currentSessionId, store.session(id)?.state == .capturing { finalizeWhenPhotosSaved(id) }
         currentSessionId = nil
         thumbnails.removeAll()
         retryMessage = nil
@@ -205,7 +211,10 @@ final class BoothController {
         }
 
         if !pendingOnCamera.isEmpty {
-            guard await transferPhotosFromCamera(sessionId: id) else { return }
+            let ok = settings.wifiQuickPreviews
+                ? await startQuickTransfer(sessionId: id)
+                : await transferPhotosFromCamera(sessionId: id)
+            guard ok else { return }
         }
 
         if canRetake {
@@ -218,6 +227,83 @@ final class BoothController {
 
     /// Shots taken by a Wi-Fi camera that still have to be fetched.
     private var pendingOnCamera: [Int] = []
+    /// Background download of the originals after quick previews (true = saved).
+    private var originalsTask: Task<Bool, Never>?
+
+    /// Queues the session for upload once every photo is on disk (immediately
+    /// unless originals are still arriving in the background).
+    private func finalizeWhenPhotosSaved(_ id: String) {
+        let finalize = { [weak self] in
+            guard let self, self.store.session(id)?.state == .capturing else { return }
+            try? self.store.finalize(sessionId: id)
+            self.uploads.trigger()
+        }
+        if let pending = originalsTask {
+            Task { if await pending.value { finalize() } }
+        } else {
+            finalize()
+        }
+    }
+
+    /// Quick previews → review right away; originals continue in the background.
+    private func startQuickTransfer(sessionId id: String) async -> Bool {
+        let shots = pendingOnCamera
+        phase = .transferring(received: 0, total: shots.count)
+        let previews: [Data]
+        do {
+            previews = try await camera.collectPreviews(count: shots.count)
+        } catch {
+            return await transferPhotosFromCamera(sessionId: id)   // camera is back in shooting mode
+        }
+        pendingOnCamera.removeAll()
+        guard previews.count == shots.count else {
+            // No previews: wait for the originals in the foreground.
+            let ok = await saveOriginals(sessionId: id, shots: shots, showProgress: true)
+            if !ok { await failTransfer(sessionId: id) }
+            return ok
+        }
+        var quick: [CGImage] = []
+        for p in previews { if let t = await Self.thumbnail(p) { quick.append(t) } }
+        thumbnails = quick
+        let task = Task { [weak self] () -> Bool in
+            guard let self else { return false }
+            let ok = await self.saveOriginals(sessionId: id, shots: shots, showProgress: false)
+            if !ok {
+                self.store.markNeedsAttention(sessionId: id, message: "Photos are still on the camera's card (newest \(shots.count)); they could not be transferred over Wi-Fi.")
+            }
+            self.originalsTask = nil
+            return ok
+        }
+        originalsTask = task
+        return true
+    }
+
+    /// Downloads the originals (one retry by re-listing the newest photos) and stores them.
+    private func saveOriginals(sessionId id: String, shots: [Int], showProgress: Bool) async -> Bool {
+        let progress: @MainActor (Int) -> Void = { [weak self] n in
+            if showProgress { self?.phase = .transferring(received: n, total: shots.count) }
+        }
+        var photos = (try? await camera.collectOriginals(progress: progress)) ?? []
+        if photos.count != shots.count {
+            photos = (try? await camera.collectPhotos(count: shots.count, progress: progress)) ?? []
+        }
+        guard photos.count == shots.count else { return false }
+        for (k, shot) in shots.enumerated() {
+            guard (try? await store.addPhoto(sessionId: id, index: shot, jpeg: photos[k])) != nil else { return false }
+        }
+        if showProgress {
+            var rebuilt: [CGImage] = []
+            for p in photos { if let t = await Self.thumbnail(p) { rebuilt.append(t) } }
+            thumbnails = rebuilt
+        }
+        return true
+    }
+
+    private func failTransfer(sessionId id: String) async {
+        store.markNeedsAttention(sessionId: id, message: "Photos are still on the camera's card; they could not be transferred over Wi-Fi.")
+        currentSessionId = nil
+        await showProblem("Your photos are safe on the camera, but we couldn't bring them over. Please ask the booth host for help.")
+    }
 
     /// Fetches the session's photos from the camera, stores them, rebuilds the
     /// thumbnails. On failure the photos stay safe on the camera's card.

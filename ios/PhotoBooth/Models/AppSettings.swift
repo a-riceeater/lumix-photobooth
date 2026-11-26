@@ -68,6 +68,8 @@ final class AppSettings {
     var wifiCameraHost: String { didSet { save("wifiCameraHost", wifiCameraHost) } }
     /// Name shown on the camera's "allow this device?" prompt.
     var wifiClientName: String { didSet { save("wifiClientName", wifiClientName) } }
+    /// Wi-Fi: show the camera's small previews first and fetch originals in the background.
+    var wifiQuickPreviews: Bool { didSet { save("wifiQuickPreviews", wifiQuickPreviews) } }
 
     var apiKey: String { didSet { Keychain.set("apiKey", apiKey) } }
     var operatorPIN: String { didSet { Keychain.set("operatorPIN", operatorPIN) } }
@@ -115,6 +117,7 @@ final class AppSettings {
         mockDeferredDelivery = bool("mockDeferredDelivery", false)
         wifiCameraHost = str("wifiCameraHost", "")
         wifiClientName = str("wifiClientName", "Photo Booth")
+        wifiQuickPreviews = bool("wifiQuickPreviews", true)
         apiKey = Keychain.get("apiKey") ?? ""
         operatorPIN = Keychain.get("operatorPIN") ?? AppSettings.defaultPIN
     }

@@ -145,6 +145,15 @@ final class SessionStore {
         try update(s)
     }
 
+    /// Operator attention: e.g. photos that stayed on a Wi-Fi camera's card.
+    /// The record is kept (even with no photos) so it shows in the upload queue.
+    func markNeedsAttention(sessionId: String, message: String) {
+        guard var s = session(sessionId) else { return }
+        s.state = .failed
+        s.lastError = message
+        try? update(s)
+    }
+
     func addEmail(sessionId: String, address: String) throws {
         guard var s = session(sessionId) else { throw StorageError.unknownSession }
         let a = address.trimmingCharacters(in: .whitespacesAndNewlines)

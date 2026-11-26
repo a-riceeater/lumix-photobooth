@@ -80,6 +80,11 @@ private struct ShotPreviewOverlay: View {
 private struct WelcomeOverlay: View {
     @Environment(AppModel.self) private var model
 
+    private var notReadyText: String {
+        if case .busy(let what) = model.camera.state { return what }
+        return "Camera warming up…"
+    }
+
     var body: some View {
         let s = model.settings
         let ready = model.camera.state.isReady
@@ -104,7 +109,7 @@ private struct WelcomeOverlay: View {
             Button {
                 model.booth.start()
             } label: {
-                Label(ready ? "Start" : "Camera warming up…", systemImage: ready ? "camera.fill" : "hourglass")
+                Label(ready ? "Start" : notReadyText, systemImage: ready ? "camera.fill" : "hourglass")
                     .frame(minWidth: 220)
             }
             .buttonStyle(BigButtonStyle())

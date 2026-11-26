@@ -213,7 +213,7 @@ struct SettingsView: View {
         case .lumixUSB:
             return "Set the S5II to USB mode PC(Tether), drive dial to single shot. Changes apply on the next (re)connect."
         case .lumixWiFi:
-            return "On the camera: MENU → Setup → IN/OUT → LAN/Wi-Fi → Wi-Fi Function → New Connection → Remote Shooting & View → Via Network, and join the same Wi-Fi as this device. Accept the connection prompt the first time. Photos are saved on the camera's card and brought over after each session's last shot (about 4–7 s per photo). Image quality must include JPEG. If the camera ever stops responding, look at it before tapping Reconnect in diagnostics."
+            return "On the camera: MENU → Setup → IN/OUT → LAN/Wi-Fi → Wi-Fi Function → New Connection → Remote Shooting & View → Via Network, and join the same Wi-Fi as this device. Accept the connection prompt the first time. Photos are saved on the camera's card and brought over after each session's last shot (about 4–7 s per photo). Image quality must include JPEG. With quick previews on, guests see their photos within a few seconds while the originals finish in the background; the next guest can start once they are saved. If the camera ever stops responding, look at it before tapping Reconnect in diagnostics."
         case .mock:
             return "The mock camera lets you test the whole workflow without hardware."
         }
@@ -243,12 +243,16 @@ struct SettingsView: View {
                     .textInputAutocapitalization(.never)
                     .autocorrectionDisabled()
                 TextField("Name shown on the camera", text: $s.wifiClientName)
+                Toggle("Show quick previews first", isOn: $s.wifiQuickPreviews)
             } else {
                 VStack(alignment: .leading) {
                     Text("Simulated capture failures: \(Int(s.mockFailureRate * 100))%")
                     Slider(value: $s.mockFailureRate, in: 0...0.5, step: 0.05)
                 }
                 Toggle("Deliver photos after the session (like Wi-Fi)", isOn: $s.mockDeferredDelivery)
+                if s.mockDeferredDelivery {
+                    Toggle("Show quick previews first", isOn: $s.wifiQuickPreviews)
+                }
             }
         } header: {
             Text("Camera")
