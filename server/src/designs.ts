@@ -49,6 +49,10 @@ export interface Design {
   preview: string | null;
   photos: PhotoSlot[];
   texts: TextElement[];
+  /** False hides the design from guest galleries and the booth (admin toggle). */
+  enabled: boolean;
+  /** Theme-builder parameters when the design was made in the admin page. */
+  builder: Record<string, unknown> | null;
   /** Absolute folder path. */
   dir: string;
   /** Changes whenever design.json or any referenced asset changes. */
@@ -213,9 +217,12 @@ export function loadDesign(dir: string): { design: Design | null; errors: string
     preview: asset(json.preview, "preview", false),
     photos,
     texts,
+    enabled: json.enabled !== false,
+    builder: json.builder && typeof json.builder === "object" ? (json.builder as Record<string, unknown>) : null,
     dir,
     fingerprint: "",
   };
+  if (json.enabled !== undefined && typeof json.enabled !== "boolean") errors.push("enabled must be true or false");
   if (!design.background) warnings.push(`no background image; backgroundColor ${design.backgroundColor} is used`);
   if (!design.preview) warnings.push("no preview.png; the gallery will render a preview from the session photos");
   if (errors.length) return { design: null, errors, warnings };
@@ -279,9 +286,14 @@ export class DesignRegistry {
     return [...this.designs.values()];
   }
 
-  /** Designs usable for a session with `photoCount` photos. */
+  /** Enabled designs usable for a session with `photoCount` photos. */
   compatible(photoCount: number): Design[] {
-    return this.list().filter((d) => d.photoCount === photoCount);
+    return this.list().filter((d) => d.enabled && d.photoCount === photoCount);
+  }
+
+  /** Designs shown to guests and the booth. */
+  listEnabled(): Design[] {
+    return this.list().filter((d) => d.enabled);
   }
 
   get(id: string): Design | undefined {

@@ -51,7 +51,7 @@ export function apiRouter(ctx: Ctx): Router {
   r.get("/designs", (req, res) => {
     const count = req.query.photoCount === undefined ? undefined : Number(req.query.photoCount);
     if (count !== undefined && !Number.isInteger(count)) throw badRequest("photoCount must be an integer");
-    const list = count === undefined ? ctx.designs.list() : ctx.designs.compatible(count);
+    const list = count === undefined ? ctx.designs.listEnabled() : ctx.designs.compatible(count);
     res.json({ designs: list.map((d) => ({ ...designSummary(d), previewUrl: `${base}/api/designs/${d.id}/preview` })) });
   });
 
