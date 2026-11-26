@@ -6,15 +6,24 @@
   <meta name="robots" content="noindex, nofollow">
   <title>Photo booth admin</title>
   <link rel="stylesheet" href="/assets/style.css">
+  <link rel="stylesheet" href="/assets/admin.css">
   <script src="/assets/admin.js" defer></script>
   <script src="/assets/admin-themes.js" defer></script>
 </head>
-<body>
-  <main class="wrap">
-    <p class="eyebrow">Photo booth</p>
-    <h1>Admin</h1>
+<body class="admin">
+  <header class="admin-bar">
+    <div class="brand">Photo booth <span>admin</span></div>
+    <nav class="tabs hidden" id="tabs" role="tablist" aria-label="Sections">
+      <button type="button" role="tab" data-tab="events" aria-selected="true">Events</button>
+      <button type="button" role="tab" data-tab="themes" aria-selected="false">Themes</button>
+      <button type="button" role="tab" data-tab="system" aria-selected="false">System</button>
+    </nav>
+    <form method="post" action="/admin/logout" class="hidden" id="signout"><button class="btn small" type="submit">Sign out</button></form>
+  </header>
 
-    <section id="login" class="card hidden">
+  <main class="admin-main">
+    <section id="login" class="card login hidden">
+      <h1>Sign in</h1>
       <p class="error hidden" id="login-error">Wrong password.</p>
       <form method="post" action="/admin/login">
         <label for="password">Admin password</label>
@@ -24,116 +33,128 @@
     </section>
 
     <div id="app" class="hidden">
-      <div class="actions">
-        <button class="btn" id="reload-designs" type="button">Reload designs</button>
-        <button class="btn" id="retry-emails" type="button">Retry failed emails</button>
-        <form method="post" action="/admin/logout"><button class="btn" type="submit">Sign out</button></form>
-      </div>
-      <p class="muted" id="summary"></p>
-      <div id="design-problems"></div>
-
-      <h2>New event</h2>
-      <form class="inline" id="new-event">
-        <div><label for="ne-id">Event id (slug)</label><input id="ne-id" pattern="[a-z0-9-]+" required placeholder="summer-party-2026"></div>
-        <div><label for="ne-name">Name</label><input id="ne-name" required placeholder="Summer Party 2026"></div>
-        <button class="btn primary" type="submit">Create</button>
-      </form>
-      <p class="muted">Events are also created automatically when the booth uploads its first session.</p>
-
-      <h2>Themes</h2>
-      <p class="muted">Photo strip designs guests can pick in their gallery. Hidden themes stay installed but are not offered.</p>
-      <div class="actions"><button class="btn primary" id="new-theme" type="button">New single-column theme</button></div>
-      <div class="theme-grid" id="themes"></div>
-
-      <section class="card builder hidden" id="builder" aria-label="Theme builder">
-        <h2 id="builder-title">New theme</h2>
-        <div class="builder-layout">
-          <form id="builder-form" class="builder-form">
-            <fieldset>
-              <legend>Name</legend>
-              <label for="b-name">Theme name</label><input id="b-name" name="name" required maxlength="60">
-              <label for="b-description">Description (optional)</label><input id="b-description" name="description" maxlength="200">
-            </fieldset>
-            <fieldset>
-              <legend>Canvas</legend>
-              <label for="b-preset">Size</label>
-              <select id="b-preset">
-                <option value="1200x3600">2×6 photo strip (1200 × 3600)</option>
-                <option value="1200x1800">4×6 portrait print (1200 × 1800)</option>
-                <option value="1080x1920">Story 9:16 (1080 × 1920)</option>
-                <option value="custom">Custom…</option>
-              </select>
-              <div class="row"><div><label for="b-width">Width px</label><input id="b-width" name="width" type="number" min="300" max="8000"></div>
-                <div><label for="b-height">Height px</label><input id="b-height" name="height" type="number" min="300" max="12000"></div></div>
-              <label for="b-bgcolor">Background colour</label><input id="b-bgcolor" name="backgroundColor" type="color">
-              <label for="b-bg">Background image (PNG/JPEG, fitted to the canvas)</label><input id="b-bg" type="file" accept="image/png,image/jpeg,image/webp">
-              <label class="check"><input id="b-bg-remove" type="checkbox"> Remove current background image</label>
-              <label for="b-fg">Overlay on top of the photos (transparent PNG, optional)</label><input id="b-fg" type="file" accept="image/png,image/webp">
-              <label class="check"><input id="b-fg-remove" type="checkbox"> Remove current overlay</label>
-            </fieldset>
-            <fieldset>
-              <legend>Photos</legend>
-              <div class="row"><div><label for="b-count">Number of photos</label><input id="b-count" name="photoCount" type="number" min="1" max="8"></div>
-                <div><label for="b-shape">Photo shape</label><select id="b-shape" name="photoShape"><option value="keep">Keep 3:2 (no cropping)</option><option value="fill">Fill the column (crops)</option></select></div></div>
-              <div class="row"><div><label for="b-margin">Outer margin px</label><input id="b-margin" name="margin" type="number" min="0" max="2000"></div>
-                <div><label for="b-gap">Gap between photos px</label><input id="b-gap" name="gap" type="number" min="0" max="2000"></div>
-                <div><label for="b-radius">Rounded corners px</label><input id="b-radius" name="cornerRadius" type="number" min="0" max="500"></div></div>
-            </fieldset>
-            <fieldset>
-              <legend>Text</legend>
-              <div class="row"><div><label for="b-textpos">Position</label><select id="b-textpos" name="textPosition"><option value="bottom">Below the photos</option><option value="top">Above the photos</option><option value="none">No text</option></select></div>
-                <div><label for="b-textarea">Text area height px</label><input id="b-textarea" name="textAreaHeight" type="number" min="0" max="4000"></div></div>
-              <label for="b-title">Title <span class="muted">({eventName}, {date}, {time} are filled in)</span></label><input id="b-title" name="title" maxlength="120">
-              <label for="b-subtitle">Subtitle</label><input id="b-subtitle" name="subtitle" maxlength="120">
-              <div class="row"><div><label for="b-font">Font</label><select id="b-font" name="fontFamily"></select></div>
-                <div><label for="b-titlesize">Title size</label><input id="b-titlesize" name="titleSize" type="number" min="8" max="600"></div>
-                <div><label for="b-subsize">Subtitle size</label><input id="b-subsize" name="subtitleSize" type="number" min="8" max="600"></div></div>
-              <div class="row"><div><label for="b-color">Title colour</label><input id="b-color" name="textColor" type="color"></div>
-                <div><label for="b-subcolor">Subtitle colour</label><input id="b-subcolor" name="subtitleColor" type="color"></div>
-                <div><label class="check"><input id="b-bold" name="bold" type="checkbox"> Bold title</label></div></div>
-            </fieldset>
-            <p class="error" id="builder-error"></p>
-            <div class="actions">
-              <button class="btn primary" type="submit" id="builder-save">Save theme</button>
-              <button class="btn" type="button" id="builder-cancel">Cancel</button>
-            </div>
+      <!-- Events -->
+      <section data-panel="events">
+        <div class="panel-head">
+          <h1>Events</h1>
+          <form class="compact-form" id="new-event">
+            <input id="ne-name" required placeholder="New event name" aria-label="New event name">
+            <input id="ne-id" pattern="[a-z0-9-]+" required placeholder="event-id" aria-label="Event id (slug)">
+            <button class="btn primary small" type="submit">Add event</button>
           </form>
-          <div class="builder-preview">
-            <p class="muted" id="preview-status">Preview with sample photos</p>
-            <div class="strip-frame"><img id="builder-preview" alt="Theme preview"></div>
-          </div>
         </div>
+        <p class="muted small-note">Events are also created automatically when the booth uploads its first session.</p>
+        <div class="event-list" id="events"></div>
       </section>
 
-      <h2>Events</h2>
-      <div id="events"></div>
+      <!-- Themes -->
+      <section data-panel="themes" class="hidden">
+        <div class="panel-head">
+          <h1>Themes</h1>
+          <button class="btn primary small" id="new-theme" type="button">New single-column theme</button>
+        </div>
+        <p class="muted small-note">Photo strip designs guests can choose in their gallery. Hidden themes stay installed but aren't offered.</p>
+        <div class="theme-grid" id="themes"></div>
+
+        <section class="card builder hidden" id="builder" aria-label="Theme builder">
+          <div class="panel-head"><h2 id="builder-title">New theme</h2><button class="btn small" type="button" id="builder-close">Close</button></div>
+          <div class="builder-layout">
+            <form id="builder-form" class="builder-form">
+              <fieldset>
+                <legend>Name</legend>
+                <div class="row"><div><label for="b-name">Theme name</label><input id="b-name" name="name" required maxlength="60"></div>
+                  <div><label for="b-description">Description (optional)</label><input id="b-description" name="description" maxlength="200"></div></div>
+              </fieldset>
+              <fieldset>
+                <legend>Canvas</legend>
+                <div class="row"><div><label for="b-preset">Size</label>
+                  <select id="b-preset">
+                    <option value="1200x3600">2×6 strip (1200 × 3600)</option>
+                    <option value="1200x1800">4×6 portrait (1200 × 1800)</option>
+                    <option value="1080x1920">Story 9:16 (1080 × 1920)</option>
+                    <option value="custom">Custom…</option>
+                  </select></div>
+                  <div><label for="b-width">Width</label><input id="b-width" name="width" type="number" min="300" max="8000"></div>
+                  <div><label for="b-height">Height</label><input id="b-height" name="height" type="number" min="300" max="12000"></div>
+                  <div><label for="b-bgcolor">Colour</label><input id="b-bgcolor" name="backgroundColor" type="color"></div></div>
+                <div class="row"><div><label for="b-bg">Background image</label><input id="b-bg" type="file" accept="image/png,image/jpeg,image/webp">
+                    <label class="check"><input id="b-bg-remove" type="checkbox"> Remove current background</label></div>
+                  <div><label for="b-fg">Overlay on top (transparent PNG)</label><input id="b-fg" type="file" accept="image/png,image/webp">
+                    <label class="check"><input id="b-fg-remove" type="checkbox"> Remove current overlay</label></div></div>
+              </fieldset>
+              <fieldset>
+                <legend>Photos</legend>
+                <div class="row"><div><label for="b-count">Photos</label><input id="b-count" name="photoCount" type="number" min="1" max="8"></div>
+                  <div><label for="b-shape">Shape</label><select id="b-shape" name="photoShape"><option value="keep">Keep 3:2</option><option value="fill">Fill column (crops)</option></select></div>
+                  <div><label for="b-margin">Margin</label><input id="b-margin" name="margin" type="number" min="0" max="2000"></div>
+                  <div><label for="b-gap">Gap</label><input id="b-gap" name="gap" type="number" min="0" max="2000"></div>
+                  <div><label for="b-radius">Corners</label><input id="b-radius" name="cornerRadius" type="number" min="0" max="500"></div></div>
+              </fieldset>
+              <fieldset>
+                <legend>Text</legend>
+                <div class="row"><div><label for="b-textpos">Position</label><select id="b-textpos" name="textPosition"><option value="bottom">Below photos</option><option value="top">Above photos</option><option value="none">No text</option></select></div>
+                  <div><label for="b-textarea">Area height</label><input id="b-textarea" name="textAreaHeight" type="number" min="0" max="4000"></div>
+                  <div><label for="b-font">Font</label><select id="b-font" name="fontFamily"></select></div>
+                  <div><label class="check"><input id="b-bold" name="bold" type="checkbox"> Bold title</label></div></div>
+                <div class="row"><div class="wide"><label for="b-title">Title <span class="muted">({eventName}, {date}, {time})</span></label><input id="b-title" name="title" maxlength="120"></div>
+                  <div><label for="b-titlesize">Size</label><input id="b-titlesize" name="titleSize" type="number" min="8" max="600"></div>
+                  <div><label for="b-color">Colour</label><input id="b-color" name="textColor" type="color"></div></div>
+                <div class="row"><div class="wide"><label for="b-subtitle">Subtitle</label><input id="b-subtitle" name="subtitle" maxlength="120"></div>
+                  <div><label for="b-subsize">Size</label><input id="b-subsize" name="subtitleSize" type="number" min="8" max="600"></div>
+                  <div><label for="b-subcolor">Colour</label><input id="b-subcolor" name="subtitleColor" type="color"></div></div>
+              </fieldset>
+              <p class="error" id="builder-error"></p>
+              <div class="actions">
+                <button class="btn primary" type="submit" id="builder-save">Save theme</button>
+                <button class="btn" type="button" id="builder-cancel">Cancel</button>
+              </div>
+            </form>
+            <div class="builder-preview">
+              <p class="muted small-note" id="preview-status">Preview with sample photos</p>
+              <div class="preview-frame"><img id="builder-preview" alt="Theme preview"></div>
+            </div>
+          </div>
+        </section>
+      </section>
+
+      <!-- System -->
+      <section data-panel="system" class="hidden">
+        <div class="panel-head"><h1>System</h1></div>
+        <dl class="facts" id="facts"></dl>
+        <div class="actions left">
+          <button class="btn small" id="reload-designs" type="button">Reload designs from disk</button>
+          <button class="btn small" id="retry-emails" type="button">Retry failed emails</button>
+        </div>
+        <h2>Design problems</h2>
+        <div id="design-problems"><p class="muted">None.</p></div>
+      </section>
     </div>
   </main>
+
   <template id="event-tpl">
-    <section class="card">
-      <h2 class="ev-title"></h2>
-      <p class="muted ev-stats"></p>
-      <form class="inline ev-form">
+    <article class="event">
+      <div class="event-row">
+        <div class="event-title"><strong class="ev-name"></strong> <code class="ev-id"></code></div>
+        <div class="chips ev-chips"></div>
+        <div class="event-actions">
+          <a class="btn small ev-gallery" target="_blank" rel="noopener">Gallery ↗</a>
+          <button class="btn small ev-sessions" type="button" aria-expanded="false">Sessions</button>
+          <button class="btn small ev-settings" type="button" aria-expanded="false">Settings</button>
+          <button class="btn small danger ev-delete" type="button" title="Delete event">Delete</button>
+        </div>
+      </div>
+      <form class="event-settings hidden">
         <div><label>Name</label><input name="name" required></div>
         <div><label>Event gallery</label>
-          <select name="galleryMode">
-            <option value="disabled">Disabled</option>
-            <option value="public">Public</option>
-            <option value="password">Password protected</option>
-          </select></div>
-        <div><label>New gallery password</label><input name="galleryPassword" type="password" autocomplete="new-password" placeholder="unchanged"></div>
-        <div><label>Accent color</label><input name="accentColor" placeholder="#18181b"></div>
+          <select name="galleryMode"><option value="disabled">Off</option><option value="public">Public</option><option value="password">Password</option></select></div>
+        <div><label>Gallery password</label><input name="galleryPassword" type="password" autocomplete="new-password" placeholder="unchanged"></div>
+        <div><label>Accent</label><span class="color-pair"><input name="accentColor" type="color"><label class="check"><input name="useAccent" type="checkbox"> custom</label></span></div>
         <div><label>Default design</label><select name="defaultDesign"></select></div>
-        <button class="btn primary" type="submit">Save</button>
+        <div class="save"><button class="btn primary small" type="submit">Save</button></div>
+        <p class="ev-msg error"></p>
       </form>
-      <p class="ev-msg muted"></p>
-      <div class="actions">
-        <a class="btn ev-gallery" target="_blank" rel="noopener">Open event gallery</a>
-        <button class="btn ev-sessions" type="button">Show sessions</button>
-        <button class="btn ev-delete" type="button">Delete event…</button>
-      </div>
-      <div class="scroll-x ev-table"></div>
-    </section>
+      <div class="event-sessions scroll-x hidden"></div>
+    </article>
   </template>
 </body>
 </html>
