@@ -1,0 +1,64 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Your photos</title>
+  <link rel="stylesheet" href="/assets/style.css">
+  <script src="/assets/session.js" defer></script>
+</head>
+<body>
+  <main class="wrap">
+    <p class="eyebrow" id="event-name">&nbsp;</p>
+    <h1 id="title">Your photos</h1>
+
+    <section id="processing" class="card notice hidden" aria-live="polite">
+      <h2>Your photos are on their way</h2>
+      <p class="muted">The photo booth is still uploading them. This page refreshes by itself &mdash; you can keep it open or come back in a few minutes.</p>
+    </section>
+
+    <section id="error" class="card notice hidden" aria-live="polite">
+      <h2>We couldn't load your photos</h2>
+      <p class="muted">Please check your connection and reload the page.</p>
+      <button class="btn" id="retry" type="button">Try again</button>
+    </section>
+
+    <div id="content" class="hidden">
+      <section class="strip-layout" aria-label="Photo strip">
+        <div class="strip-frame"><img id="strip" alt="Your photo strip"></div>
+        <div>
+          <div class="actions">
+            <a class="btn primary" id="strip-download" href="#" download>Download strip</a>
+            <button class="btn hidden" id="strip-share" type="button">Share</button>
+          </div>
+          <div id="design-section">
+            <h2>Choose a design</h2>
+            <div class="designs" id="designs" role="group" aria-label="Photo strip designs"></div>
+          </div>
+        </div>
+      </section>
+
+      <h2>Photos</h2>
+      <div class="grid" id="photos"></div>
+      <div class="actions">
+        <a class="btn" id="download-all" href="#">Download all photos (.zip)</a>
+        <button class="btn hidden" id="share-link" type="button">Share this page</button>
+      </div>
+    </div>
+  </main>
+
+  <dialog class="viewer" id="viewer" aria-label="Photo viewer">
+    <div class="viewer-inner">
+      <div class="viewer-img"><img id="viewer-img" alt=""></div>
+      <div class="viewer-bar">
+        <button class="btn" id="viewer-prev" type="button" aria-label="Previous photo">&larr;</button>
+        <a class="btn" id="viewer-download" href="#" download>Download</a>
+        <button class="btn hidden" id="viewer-share" type="button">Share</button>
+        <button class="btn" id="viewer-close" type="button">Close</button>
+        <button class="btn" id="viewer-next" type="button" aria-label="Next photo">&rarr;</button>
+      </div>
+    </div>
+  </dialog>
+</body>
+</html>
