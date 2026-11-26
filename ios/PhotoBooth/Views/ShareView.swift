@@ -24,7 +24,7 @@ struct ShareView: View {
                         .font(.title3)
                         .multilineTextAlignment(landscape ? .leading : .center)
                         .fixedSize(horizontal: false, vertical: true)
-                    UploadStatusLine(session: session, online: model.uploads.isOnline)
+                    UploadStatusLine(session: session, online: model.uploads.isOnline, saving: booth.backgroundSaving)
                     ForEach(session?.emails ?? []) { e in
                         Label("We'll email the link to \(e.masked)", systemImage: "envelope.fill")
                             .font(.callout)
@@ -68,9 +68,11 @@ struct ShareView: View {
 private struct UploadStatusLine: View {
     let session: LocalSession?
     let online: Bool
+    var saving: (done: Int, total: Int)? = nil
 
     var body: some View {
         let (icon, text): (String, String) = {
+            if let saving { return ("arrow.down.circle", "Saving the full-size photos from the camera… \(saving.done) of \(saving.total). The link starts working once they're uploaded.") }
             guard let s = session else { return ("hourglass", "Preparing your photos…") }
             switch s.state {
             case .synced: return ("checkmark.circle.fill", "Your photos are online and ready.")

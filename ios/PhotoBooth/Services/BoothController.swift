@@ -32,6 +32,9 @@ final class BoothController {
     private(set) var autoAdvanceRemaining: Int?
     /// Retakes used in the current session.
     private(set) var retakesUsed = 0
+    /// Full-size photos still coming off a Wi-Fi camera in the background
+    /// (after quick previews), for the review/share screens.
+    private(set) var backgroundSaving: (done: Int, total: Int)?
 
     @ObservationIgnored private let settings: AppSettings
     @ObservationIgnored private let store: SessionStore
@@ -251,7 +254,9 @@ final class BoothController {
         phase = .transferring(received: 0, total: shots.count)
         let previews: [Data]
         do {
-            previews = try await camera.collectPreviews(count: shots.count)
+            previews = try await camera.collectPreviews(count: shots.count) { [weak self] n in
+                self?.phase = .transferring(received: n, total: shots.count)
+            }
         } catch {
             return await transferPhotosFromCamera(sessionId: id)   // camera is back in shooting mode
         }
@@ -265,9 +270,11 @@ final class BoothController {
         var quick: [CGImage] = []
         for p in previews { if let t = await Self.thumbnail(p) { quick.append(t) } }
         thumbnails = quick
+        backgroundSaving = (0, shots.count)
         let task = Task { [weak self] () -> Bool in
             guard let self else { return false }
             let ok = await self.saveOriginals(sessionId: id, shots: shots, showProgress: false)
+            self.backgroundSaving = nil
             if !ok {
                 self.store.markNeedsAttention(sessionId: id, message: "Photos are still on the camera's card (newest \(shots.count)); they could not be transferred over Wi-Fi.")
             }
@@ -282,6 +289,7 @@ final class BoothController {
     private func saveOriginals(sessionId id: String, shots: [Int], showProgress: Bool) async -> Bool {
         let progress: @MainActor (Int) -> Void = { [weak self] n in
             if showProgress { self?.phase = .transferring(received: n, total: shots.count) }
+            else { self?.backgroundSaving = (n, shots.count) }
         }
         var photos = (try? await camera.collectOriginals(progress: progress)) ?? []
         if photos.count != shots.count {

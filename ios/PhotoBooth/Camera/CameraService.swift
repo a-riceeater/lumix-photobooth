@@ -132,7 +132,7 @@ protocol CameraService: AnyObject {
     /// Quick path: small camera-made previews of the newest `count` photos.
     /// The camera then stays ready to deliver the originals with `collectOriginals`.
     /// Returns [] if previews are unavailable (originals still pending).
-    func collectPreviews(count: Int) async throws -> [Data]
+    func collectPreviews(count: Int, progress: @escaping @MainActor (Int) -> Void) async throws -> [Data]
     /// Originals for the photos of the last `collectPreviews` call, then the
     /// camera returns to shooting mode.
     func collectOriginals(progress: @escaping @MainActor (Int) -> Void) async throws -> [Data]
@@ -142,7 +142,7 @@ protocol CameraService: AnyObject {
 
 extension CameraService {
     func collectPhotos(count: Int, progress: @escaping @MainActor (Int) -> Void) async throws -> [Data] { [] }
-    func collectPreviews(count: Int) async throws -> [Data] { [] }
+    func collectPreviews(count: Int, progress: @escaping @MainActor (Int) -> Void) async throws -> [Data] { [] }
     func collectOriginals(progress: @escaping @MainActor (Int) -> Void) async throws -> [Data] { [] }
 }
 

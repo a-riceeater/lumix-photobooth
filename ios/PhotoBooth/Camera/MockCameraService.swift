@@ -164,7 +164,7 @@ final class MockCameraService: CameraService {
 
     @ObservationIgnored private var pendingOriginals: [Data] = []
 
-    func collectPreviews(count: Int) async throws -> [Data] {
+    func collectPreviews(count: Int, progress: @escaping @MainActor (Int) -> Void) async throws -> [Data] {
         pendingOriginals = Array(deferred.suffix(count))
         deferred.removeAll()
         state = .busy("Getting the last photos…")
@@ -177,6 +177,7 @@ final class MockCameraService: CameraService {
                 return MockScene.jpeg(thumb, quality: 0.8)
             }
         }.value
+        for i in previews.indices { progress(i + 1) }
         log.add("mock: \(previews.count) quick preview(s)")
         return previews
     }

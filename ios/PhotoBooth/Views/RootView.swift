@@ -113,7 +113,9 @@ private struct StatusBadges: View {
     var body: some View {
         let pending = model.uploads.pending.count
         HStack(spacing: 10) {
-            if !model.camera.state.isReady {
+            if case .busy = model.camera.state {
+                badge("arrow.down.circle.fill", "Saving", .white.opacity(0.85))
+            } else if !model.camera.state.isReady {
                 badge("camera.fill", "Camera", .orange)
             }
             if !model.uploads.isOnline {

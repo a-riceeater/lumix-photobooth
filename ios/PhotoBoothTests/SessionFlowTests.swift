@@ -345,6 +345,7 @@ final class SessionFlowTests: XCTestCase {
         XCTAssertEqual(booth.thumbnails.count, 3, "real previews shown before the originals arrive")
         XCTAssertLessThan(store.session(id)?.photos.count ?? 0, 3, "originals still downloading in the background")
         XCTAssertFalse(cam.state.isReady, "the next guest waits until the originals are saved")
+        XCTAssertNotNil(booth.backgroundSaving, "review/share screens show the background progress")
 
         booth.accept()   // share screen right away; finalize happens after the originals
         XCTAssertEqual(booth.phase, .share)
@@ -352,6 +353,7 @@ final class SessionFlowTests: XCTestCase {
         XCTAssertEqual(store.session(id)?.state, .ready)
         XCTAssertEqual(store.session(id)?.photos.map(\.index), [0, 1, 2])
         XCTAssertTrue(cam.state.isReady)
+        XCTAssertNil(booth.backgroundSaving)
         await cam.stop()
     }
 

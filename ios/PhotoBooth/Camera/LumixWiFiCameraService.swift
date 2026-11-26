@@ -375,7 +375,7 @@ final class LumixWiFiCameraService: CameraService {
     @ObservationIgnored private var pendingItems: [CameraContentItem] = []
     @ObservationIgnored private var holdingPlayback = false
 
-    func collectPreviews(count: Int) async throws -> [Data] {
+    func collectPreviews(count: Int, progress: @escaping @MainActor (Int) -> Void) async throws -> [Data] {
         try await operation.withLock {
             guard count > 0 else { return [] }
             guard let c = client else { throw CaptureError.notConnected }
@@ -402,6 +402,7 @@ final class LumixWiFiCameraService: CameraService {
                     return []
                 }
                 previews.append(data)
+                progress(previews.count)
             }
             log.add(String(format: "previews: %d in %.2f s (%.0f KB)", previews.count, Date().timeIntervalSince(started),
                            Double(previews.reduce(0) { $0 + $1.count }) / 1024))

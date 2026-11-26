@@ -167,16 +167,25 @@ private struct TransferOverlay: View {
 
     var body: some View {
         VStack(spacing: 20) {
-            ProgressView(value: Double(received), total: Double(max(total, 1)))
-                .progressViewStyle(.linear)
-                .tint(.white)
-                .frame(maxWidth: 360)
-            Text("Bringing your photos over…")
+            if received == 0 {
+                // The camera is switching modes and finding the photos.
+                ProgressView().controlSize(.large).tint(.white)
+            } else {
+                ProgressView(value: Double(received), total: Double(max(total, 1)))
+                    .progressViewStyle(.linear)
+                    .tint(.white)
+                    .frame(maxWidth: 360)
+            }
+            Text(received == 0 ? "Getting your photos from the camera…" : "Bringing your photos over…")
                 .font(.system(size: 34, weight: .bold, design: .rounded))
-            Text("\(received) of \(total)")
-                .font(.title2.monospacedDigit())
-                .opacity(0.8)
+                .multilineTextAlignment(.center)
+            if received > 0 {
+                Text("\(received) of \(total)")
+                    .font(.title2.monospacedDigit())
+                    .opacity(0.8)
+            }
         }
+        .animation(.easeInOut(duration: 0.2), value: received)
         .foregroundStyle(.white)
         .padding(40)
         .frame(maxWidth: .infinity, maxHeight: .infinity)

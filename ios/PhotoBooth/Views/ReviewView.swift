@@ -40,6 +40,12 @@ struct ReviewView: View {
                     }
                     .buttonStyle(BigButtonStyle())
                 }
+                if let saving = booth.backgroundSaving {
+                    Label("Saving full-size photos… \(saving.done) of \(saving.total)", systemImage: "arrow.down.circle")
+                        .font(.callout)
+                        .opacity(0.75)
+                        .monospacedDigit()
+                }
                 if let left = booth.autoAdvanceRemaining {
                     Text("Continuing automatically in \(left)s")
                         .font(.callout)
