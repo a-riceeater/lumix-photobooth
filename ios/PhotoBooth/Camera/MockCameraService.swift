@@ -162,6 +162,38 @@ final class MockCameraService: CameraService {
         return out
     }
 
+    @ObservationIgnored private var pendingOriginals: [Data] = []
+
+    func collectPreviews(count: Int) async throws -> [Data] {
+        pendingOriginals = Array(deferred.suffix(count))
+        deferred.removeAll()
+        state = .busy("Getting the last photos…")
+        try await Task.sleep(nanoseconds: 150_000_000)
+        let previews = await Task.detached(priority: .userInitiated) { [pendingOriginals] in
+            pendingOriginals.compactMap { data -> Data? in
+                guard let src = CGImageSourceCreateWithData(data as CFData, nil),
+                      let thumb = CGImageSourceCreateThumbnailAtIndex(src, 0, [kCGImageSourceCreateThumbnailFromImageAlways: true,
+                                                                               kCGImageSourceThumbnailMaxPixelSize: 640] as CFDictionary) else { return nil }
+                return MockScene.jpeg(thumb, quality: 0.8)
+            }
+        }.value
+        log.add("mock: \(previews.count) quick preview(s)")
+        return previews
+    }
+
+    func collectOriginals(progress: @escaping @MainActor (Int) -> Void) async throws -> [Data] {
+        defer {
+            pendingOriginals.removeAll()
+            if case .busy = state { state = .ready }
+        }
+        for i in pendingOriginals.indices {
+            try await Task.sleep(nanoseconds: 300_000_000)
+            progress(i + 1)
+        }
+        log.add("mock: delivered \(pendingOriginals.count) original(s) in the background")
+        return pendingOriginals
+    }
+
     func capture() async throws -> CaptureResult {
         guard state.isReady else { throw CaptureError.notConnected }
         guard !capturing else { throw CaptureError.busy }
