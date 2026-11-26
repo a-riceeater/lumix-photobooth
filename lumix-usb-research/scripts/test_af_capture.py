@@ -5,7 +5,7 @@ import sys, pathlib, time
 root = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root / "src"))
 from lumix_usb.transport.wpd import WPDTransport
-from lumix_usb.panasonic import Camera, Target, PROPS, AF_LOCK_CLEAR
+from lumix_usb.panasonic import AF, Camera, Target, PROPS, AF_LOCK_CLEAR
 from lumix_usb.ptp import rc_name
 
 N = int(sys.argv[1]) if len(sys.argv) > 1 else 3
@@ -20,7 +20,7 @@ try:
     cam.liveview_start(); time.sleep(0.5)
     for i in range(N):
         r, st, dt = cam.autofocus_wait(timeout=6)
-        state = {0xFFFF: "finished", 0x0000: "focusing", 0xFFFE: "idle"}.get(st, st)
+        state = AF.NAMES.get(st, st)
         print(f"shot {i}: AF {rc_name(r.code)} -> {state} after {dt:.2f}s")
         res = cam.capture(timeout=15)
         h_info = res["objects"][-1] if res["objects"] else None

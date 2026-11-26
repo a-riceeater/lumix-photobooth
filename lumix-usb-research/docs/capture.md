@@ -88,8 +88,9 @@ once:  0x940B target=PC ; 0x9403 quality=FINE (0x020000A2 = 0)  [read back]
        0x9412 liveview start
 check: 0x9402(0x02000080): drive 0x02000081 == 0 (single); AF mode 0x02000071 (lever)
 shot:  drain old events
-       (optional) 0x9405(0x03000024) AF; wait until the C101 status dump field
-                  0x01000011 goes 0x0000 -> 0xFFFF (Camera.autofocus_wait)
+       (optional) 0x9405(0x03000024) AF; wait for a fresh C101 status dump with
+                  0x01000011 = 0x0000 in focus / 0x0004 failed (Camera.autofocus_wait)
+                  failed -> 0x9405(0x03000025) clear, tell the guest, do NOT release
        0x9404(0x03000011)
          GeneralError -> wait 1 s, retry once
        wait <=15 s (+ shutter time) for C109/C108
@@ -103,7 +104,12 @@ Implemented as `Camera.capture()` + `Camera.download()` in `src/lumix_usb/panaso
 
 ## Open items
 
-* AF failure: what 0x01000011 reports when focus fails, and whether `0x9404`
-  then refuses (tethr: silently no image). PENDING (needs lens covered).
+* AF failure (VERIFIED, AF-C, lens covered): 0x01000011 = 0x0004 after ~1 s;
+  0x9404 then returns OK but **no object and no event** arrives (2 shots after
+  failed AF, 2 release-only). The same happens release-only, so a booth must
+  time out (we use 10–15 s) or check the AF result first.
+* The AF timings in the tables above that used `autofocus_wait` waited for
+  0xFFFF (result *ended*), ~1 s later than focus was actually achieved (0x0000).
+  Re-measurement with the corrected wait is PENDING (lens uncovered).
 * Behaviour with no SD card inserted (both targets).
 * Burst/drive modes; `0x9113` skip; target BOTH (2).

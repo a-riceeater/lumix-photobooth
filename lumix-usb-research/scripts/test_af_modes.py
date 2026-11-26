@@ -9,12 +9,12 @@ import sys, pathlib, time
 root = pathlib.Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(root / "src"))
 from lumix_usb.transport.wpd import WPDTransport
-from lumix_usb.panasonic import Camera, Target, PROPS, AF_LOCK_CLEAR
+from lumix_usb.panasonic import AF, Camera, Target, PROPS, AF_LOCK_CLEAR
 from lumix_usb.ptp import rc_name
 
 N = int(sys.argv[1]) if len(sys.argv) > 1 else 3
 AFMODE = {3: "MF", 4: "AFS", 5: "AFC", 6: "AFF"}
-STATE = {0xFFFF: "finished", 0x0000: "focusing", 0xFFFE: "idle", None: "?"}
+STATE = {**AF.NAMES, None: "?"}
 t = WPDTransport.open_first()
 t.set_jsonl_log(str(root / "captures/direct" / f"test_af_modes_{int(time.time())}.jsonl"))
 cam = Camera(t); cam.connect()

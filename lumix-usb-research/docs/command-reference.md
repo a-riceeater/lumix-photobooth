@@ -128,6 +128,11 @@ Verification:    VERIFIED (ISO round trip auto→400→auto; quality 4→0→4)
 ```
 
 ### 0x9404 — Release (shutter)
+
+**Important:** OK only means "accepted". If the camera cannot focus (AF-S/AF-C,
+lens covered) it returns OK and then produces **no image and no event at all**
+(VERIFIED ×4, AF-C). Detect via the AF result (0x0004) or an object timeout.
+
 ```
 Opcode:          0x9404
 Parameters:      p1 = 0x03000011
@@ -149,11 +154,17 @@ Parameters:      p1 = 0x03000024 one-shot AF (tethr), others (libgphoto2 names):
                  0x03000021 AE lock, 0x03000022 AF lock, 0x03000023 AF/AE lock,
                  0x03000025 lock clear
 Response:        OK in 14–19 ms (asynchronous)
-Completion:      no dedicated event. Each C101 is acked with 0x9401; in the
-                 returned dump, 0x01000011 (u16) goes 0xFFFE idle -> 0x0000
-                 focusing (0x01000012 byte 4 = 3) -> 0xFFFF finished/locked.
-                 0x03000025 (lock clear) returns it to 0xFFFE.
-                 AF-S: 1.38–1.67 s on the test scene.
+Completion:      no dedicated event. Each C101 is acked with 0x9401; the
+                 returned dump field 0x01000011 (u16) is the AF RESULT:
+                   0xFFFE none (idle)
+                   0x0000 IN FOCUS   (AF-S: 0x01000012 byte 4 = 3, maybe #areas)
+                   0x0004 FAILED     (lens covered; ~0.9–1.1 s after command)
+                   0xFFFF result ended (~1 s after IN FOCUS) / after clear of FAILED
+                 Observed: success FFFE -> 0000 (0.3–0.6 s) -> FFFF (~1.4–1.7 s);
+                 failure FFFE -> 0004, stays until 0x03000025 (lock clear) -> FFFF.
+                 AF-S success: FFFF -> (clear) FFFE.
+                 (An earlier reading of 0000 as "focusing" and FFFF as "finished"
+                 was wrong; it was corrected by the lens-covered test.)
 AF-C (lever AFC, af_mode 5): same 0xFFFE -> 0x0000 (~0.3 s) -> 0xFFFF (~1.4 s)
                  sequence, but 0x01000012 byte 4 stays 0, and lock clear does not
                  produce a new status dump (state keeps reading 0xFFFF).

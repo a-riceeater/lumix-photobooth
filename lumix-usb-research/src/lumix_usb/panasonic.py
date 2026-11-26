@@ -54,6 +54,16 @@ CAPTURE_TARGET_PROP = 0x08000091
 CAPTURE_TARGET_QUERY = 0x08000090
 
 
+class AF:
+    """Values of 0x01000011 in the 0x9401 status dump (VERIFIED S5II, AF-S/AF-C)."""
+    NONE = 0xFFFE      # no AF result (idle, after lock clear in AF-S)
+    IN_FOCUS = 0x0000  # focus achieved (AF-S: 0x01000012 byte 4 = 3, maybe #areas)
+    FAILED = 0x0004    # could not focus (lens covered); camera then refuses to release
+    ENDED = 0xFFFF     # result display ended (~1 s after IN_FOCUS) / cleared after FAILED
+
+    NAMES = {0xFFFE: "none", 0x0000: "in-focus", 0x0004: "failed", 0xFFFF: "ended"}
+
+
 class Target:
     SD = 0
     PC = 1        # "SDRAM": image is held in camera RAM and announced with 0xC109
@@ -170,6 +180,7 @@ class Camera:
         self.vendor_session = False
         self.liveview_on = False
         self.status: dict[int, bytes] = {}          # last 0x9401 status dump
+        self.status_seq = 0                         # increments per dump
         self.status_cond = threading.Condition()
 
     # -- events -------------------------------------------------------------
@@ -187,6 +198,7 @@ class Camera:
                     if r.ok:
                         with self.status_cond:
                             self.status = parse_tlv(r.data)
+                            self.status_seq += 1
                             self.status_cond.notify_all()
                 except Exception as e:
                     self.t.log_note(kind="ack_error", error=repr(e))
@@ -329,28 +341,29 @@ class Camera:
         return self.t.command(POC.AFAE, AF_ONESHOT)
 
     def af_state(self) -> Optional[int]:
-        """0x01000011 from the last C101 status dump (VERIFIED transitions on S5II):
-        0xFFFE idle, 0x0000 focusing, 0xFFFF finished/locked."""
+        """0x01000011 from the last C101 status dump; see class AF."""
         v = self.status.get(0x01000011)
         return struct.unpack_from("<H", v)[0] if v and len(v) >= 2 else None
 
     def autofocus_wait(self, timeout: float = 5.0) -> tuple[Response, Optional[int], float]:
-        """AF one-shot, then block until the status dump reports 0xFFFF (or timeout).
-        Returns (response, final af_state, seconds). Needs auto_ack=True."""
+        """AF one-shot, then block until a status dump received *after* the command
+        reports AF.IN_FOCUS or AF.FAILED (or timeout). Returns (response, state, s).
+        Requires auto_ack=True (the dump is the 0x9401 reply to C101)."""
+        with self.status_cond:
+            seq0 = self.status_seq
         t0 = time.monotonic()
-        seen_busy = False
         r = self.autofocus()
         if not r.ok:
-            return r, self.af_state(), 0.0
+            return r, None, 0.0
+        state = None
         with self.status_cond:
             while (left := t0 + timeout - time.monotonic()) > 0:
-                st = self.af_state()
-                if st == 0x0000:
-                    seen_busy = True
-                elif st == 0xFFFF and seen_busy:
-                    break
+                if self.status_seq > seq0:
+                    state = self.af_state()
+                    if state in (AF.IN_FOCUS, AF.FAILED):
+                        break
                 self.status_cond.wait(left)
-        return r, self.af_state(), time.monotonic() - t0
+        return r, state, time.monotonic() - t0
 
     def af_control(self, param: int) -> Response:
         return self.t.command(POC.AFAE, param)
