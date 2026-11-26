@@ -169,12 +169,15 @@
     const seq = ++previewSeq;
     $("preview-status").textContent = "Updating preview…";
     try {
-      const blob = await (await api("POST", "/themes/preview", payload())).blob();
+      const res = await api("POST", "/themes/preview", payload());
+      const warning = decodeURIComponent(res.headers.get("X-Theme-Warnings") || "");
+      const blob = await res.blob();
       if (seq !== previewSeq) return; // a newer preview is on its way
       if (previewUrl) URL.revokeObjectURL(previewUrl);
       previewUrl = URL.createObjectURL(blob);
       $("builder-preview").src = previewUrl;
-      $("preview-status").textContent = "Preview with sample photos";
+      $("preview-status").textContent = warning ? `⚠︎ ${warning}` : "Preview with sample photos";
+      $("preview-status").classList.toggle("warn-text", Boolean(warning));
       $("builder-error").textContent = "";
     } catch (e) {
       if (seq !== previewSeq) return;

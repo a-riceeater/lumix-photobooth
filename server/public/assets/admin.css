@@ -95,6 +95,7 @@ body.admin .actions .btn { flex: 0 0 auto; }
 
 /* builder preview: no broken-image icon before the first render */
 .preview-frame img:not([src]) { display: none; }
+.warn-text { color: #d97706 !important; }
 .preview-frame:has(img:not([src]))::after { content: "Rendering preview…"; color: var(--muted); padding: 40px 0; }
 
 @media (max-width: 700px) {

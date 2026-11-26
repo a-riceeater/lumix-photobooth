@@ -153,9 +153,8 @@ export function layoutSingleColumn(p: SingleColumnParams): BuiltLayout {
   const areaTop = p.textPosition === "top" ? textH : 0;
   const areaH = p.height - textH;
   const colW = p.width - 2 * p.margin;
-  // With a top margin the photos start there and may use the space down to the bottom margin.
-  const top = p.topMargin ?? p.margin;
-  const availH = areaH - top - p.margin - (p.photoCount - 1) * p.gap;
+  // Photo size never depends on the top margin: it only moves the stack.
+  const availH = areaH - 2 * p.margin - (p.photoCount - 1) * p.gap;
   if (colW < 20 || availH < 20 * p.photoCount) {
     throw badRequest("The photos don't fit: reduce the margins, gap, text area or number of photos, or make the canvas larger");
   }
@@ -201,6 +200,18 @@ export function layoutSingleColumn(p: SingleColumnParams): BuiltLayout {
     });
   }
   return { photos, texts };
+}
+
+/** Human-readable layout problems that don't block saving (e.g. a top margin pushing photos off). */
+export function layoutWarnings(p: SingleColumnParams): string[] {
+  const { photos } = layoutSingleColumn(p);
+  const last = photos[photos.length - 1];
+  const bottom = last.y + last.height;
+  const out: string[] = [];
+  if (bottom > p.height) out.push(`The last photo runs ${bottom - p.height} px past the bottom of the canvas — lower the top margin.`);
+  else if (p.textPosition === "bottom" && bottom > p.height - p.textAreaHeight) out.push("The photos overlap the text area.");
+  if (p.textPosition === "top" && p.topMargin !== null && p.topMargin < p.textAreaHeight) out.push("The photos overlap the text area.");
+  return out;
 }
 
 /** design.json content for a builder theme (assets are added by the caller). */

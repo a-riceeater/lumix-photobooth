@@ -24,7 +24,8 @@ Folders starting with `_` or `.` are ignored (handy for drafts).
   upload is kept as `background-source.png`, so changing the canvas later re-crops it cleanly.
 * **Overlay** — an optional transparent PNG drawn on top of the photos (frames, stickers, logos).
 * **Photos** — how many (1–8), outer margin, gap, rounded corners, an optional **top margin** (distance from
-  the top to the first photo; empty = the photos are centred), and the shape: *Keep 3:2* (whole photo, the
+  the top to the first photo; empty = the photos are centred — it only moves the photos, never resizes them,
+  and the builder warns if they run into the text or off the canvas), and the shape: *Keep 3:2* (whole photo, the
   column shrinks to fit) or *Fill the column* (photos stretch to the available height and are cropped).
 * **Text** — a *Show text* switch (off = no text and no text area), title and subtitle (`{eventName}`, `{date}`, `{time}` are filled in), above or below the photos or
   none, the height of the text area, font, sizes and colours.

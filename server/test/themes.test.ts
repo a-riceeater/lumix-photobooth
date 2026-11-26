@@ -2,7 +2,7 @@ import fs from "node:fs";
 import path from "node:path";
 import sharp from "sharp";
 import { describe, expect, it } from "vitest";
-import { layoutSingleColumn, normalizeParams, SINGLE_COLUMN_DEFAULTS } from "../src/themeBuilder.js";
+import { layoutSingleColumn, layoutWarnings, normalizeParams, SINGLE_COLUMN_DEFAULTS } from "../src/themeBuilder.js";
 import { ADMIN_PASSWORD, REPO_DESIGNS, startServer, tempDir, uploadSession } from "./helpers.js";
 
 const basic = "Basic " + Buffer.from(`admin:${ADMIN_PASSWORD}`).toString("base64");
@@ -45,12 +45,24 @@ describe("single-column layout", () => {
     const top = layoutSingleColumn(normalizeParams({ name: "x", topMargin: 300 })).photos;
     expect(top[0].y).toBe(300);
     expect(centred[0].y).not.toBe(300);
-    // fill: the photos use everything from the top margin down to the bottom margin of the photo area
-    const fill = layoutSingleColumn(normalizeParams({ name: "x", topMargin: 300, photoShape: "fill" })).photos;
-    expect(fill[0].y).toBe(300);
-    expect(fill[2].y + fill[2].height).toBeGreaterThan(3600 - 600 - 60 - 3);
+    // Moving the stack never resizes the photos, in either shape.
+    for (const photoShape of ["keep", "fill"]) {
+      const a = layoutSingleColumn(normalizeParams({ name: "x", photoShape })).photos;
+      const b = layoutSingleColumn(normalizeParams({ name: "x", photoShape, topMargin: 40 })).photos;
+      const c = layoutSingleColumn(normalizeParams({ name: "x", photoShape, topMargin: 500 })).photos;
+      expect(b.map((p) => [p.width, p.height])).toEqual(a.map((p) => [p.width, p.height]));
+      expect(c.map((p) => [p.width, p.height])).toEqual(a.map((p) => [p.width, p.height]));
+      expect(b[0].y).toBe(40);
+      expect(c[0].y).toBe(500);
+    }
     expect(normalizeParams({ name: "x", topMargin: "" }).topMargin).toBeNull();
     expect(() => normalizeParams({ name: "x", topMargin: -5 })).toThrow(/topMargin/);
+  });
+
+  it("warns instead of shrinking when the top margin pushes photos too far", () => {
+    expect(layoutWarnings(normalizeParams({ name: "x" }))).toEqual([]);
+    expect(layoutWarnings(normalizeParams({ name: "x", topMargin: 900 })).join()).toMatch(/text area/);
+    expect(layoutWarnings(normalizeParams({ name: "x", topMargin: 2000 })).join()).toMatch(/past the bottom/);
   });
 
   it("drops the text block entirely when text is off", () => {

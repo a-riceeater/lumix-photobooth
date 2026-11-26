@@ -10,7 +10,7 @@ import { DESIGN_ID_RE, isDesignId } from "./ids.js";
 import { log } from "./log.js";
 import { previewScale, renderDesign } from "./render.js";
 import { samplePhoto } from "./samples.js";
-import { designJson, normalizeParams, type SingleColumnParams } from "./themeBuilder.js";
+import { designJson, layoutWarnings, normalizeParams, type SingleColumnParams } from "./themeBuilder.js";
 
 /** Uploaded images arrive as base64 (data URLs allowed) inside the admin JSON API. */
 export interface ThemeAssets {
@@ -107,8 +107,9 @@ export class ThemeService {
   }
 
   /** Renders a preview of unsaved builder settings (nothing is written to DESIGNS_DIR). */
-  async preview(paramsRaw: unknown, assets: ThemeAssets, editingId?: unknown): Promise<Buffer> {
+  async preview(paramsRaw: unknown, assets: ThemeAssets, editingId?: unknown): Promise<{ jpeg: Buffer; warnings: string[] }> {
     const p = normalizeParams(paramsRaw);
+    const warnings = layoutWarnings(p);
     const existing = editingId ? this.requireTheme(editingId) : undefined;
     const tmp = path.join(this.ctx.cfg.dataDir, "tmp", `theme-${randomBytes(6).toString("hex")}`);
     try {
@@ -116,7 +117,8 @@ export class ThemeService {
       const target = path.join(tmp, "preview-theme");
       await this.writeFolder(target, "preview-theme", 1, p, assets, existing, true);
       const { design } = loadDesign(target);
-      return await renderDesign(design!, await sampleInputs(design!), { scale: previewScale(design!, 1000), eventName: "Event Name" });
+      const jpeg = await renderDesign(design!, await sampleInputs(design!), { scale: previewScale(design!, 1000), eventName: "Event Name" });
+      return { jpeg, warnings };
     } finally {
       await fsp.rm(tmp, { recursive: true, force: true });
     }

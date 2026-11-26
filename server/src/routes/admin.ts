@@ -60,8 +60,10 @@ export function adminApiRouter(ctx: Ctx): Router {
     res.json({ ...themes.list(), defaults: SINGLE_COLUMN_DEFAULTS, fonts: FONT_CHOICES });
   });
   r.post("/themes/preview", async (req, res) => {
-    const jpeg = await themes.preview(req.body?.params, req.body ?? {}, req.body?.id);
+    const { jpeg, warnings } = await themes.preview(req.body?.params, req.body ?? {}, req.body?.id);
     res.setHeader("Cache-Control", "no-store");
+    // Header values must be ASCII-safe: send the warnings URI-encoded.
+    if (warnings.length) res.setHeader("X-Theme-Warnings", encodeURIComponent(warnings.join(" ")));
     res.type("jpeg").send(jpeg);
   });
   r.post("/themes", async (req, res) => {
