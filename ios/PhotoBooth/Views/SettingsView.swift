@@ -12,6 +12,7 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 statusSection
+                serverSection
                 Section("Event") {
                     TextField("Event name", text: $s.eventName)
                     HStack {
@@ -23,8 +24,6 @@ struct SettingsView: View {
                     if !AppSettings.isValidEventId(s.eventId) {
                         Text("Use lowercase letters, digits and dashes (e.g. summer-party-2026).").foregroundStyle(.red).font(.footnote)
                     }
-                    Stepper("Photos per session: \(s.photosPerSession)", value: $s.photosPerSession, in: 1...6)
-                    Stepper("Countdown: \(s.countdownSeconds) s", value: $s.countdownSeconds, in: 1...10)
                     Picker("Default strip design", selection: $s.defaultDesignId) {
                         Text("Server default").tag("")
                         ForEach(model.designs.filter { $0.photoCount == s.photosPerSession }) { d in
@@ -35,32 +34,38 @@ struct SettingsView: View {
                         }
                     }
                 }
-                Section("Guest experience") {
+                Section {
+                    Stepper("Photos per session: \(s.photosPerSession)", value: $s.photosPerSession, in: 1...8)
+                    Stepper("Countdown before first photo: \(s.countdownSeconds) s", value: $s.countdownSeconds, in: 1...15)
+                    Stepper("Countdown between photos: \(s.betweenPhotosCountdownSeconds) s", value: $s.betweenPhotosCountdownSeconds, in: 1...15)
+                    Stepper(s.postCapturePreviewSeconds == 0 ? "Show each photo after capture: off" : "Show each photo after capture: \(s.postCapturePreviewSeconds) s",
+                            value: $s.postCapturePreviewSeconds, in: 0...10)
+                } header: {
+                    Text("Photos & timing")
+                } footer: {
+                    Text("A session takes about \(sessionSeconds(s)) s. Designs only appear in the gallery if they are made for this number of photos\(designCountNote(s)).")
+                }
+                Section {
+                    Toggle("Allow retake", isOn: $s.allowRetake)
+                    if s.allowRetake {
+                        Stepper(s.maxRetakes == 0 ? "Retakes per session: unlimited" : "Retakes per session: \(s.maxRetakes)",
+                                value: $s.maxRetakes, in: 0...10)
+                    }
+                    Stepper("Review auto-continue: \(s.reviewTimeoutSeconds) s", value: $s.reviewTimeoutSeconds, in: 5...300, step: 5)
+                    Toggle("Offer email delivery", isOn: $s.offerEmail)
+                    Stepper("Return to start after: \(s.resetTimeoutSeconds) s", value: $s.resetTimeoutSeconds, in: 10...600, step: 10)
+                } header: {
+                    Text("Review & sharing")
+                } footer: {
+                    Text("After the review time the photos are kept automatically. Retakes are set to 0 = unlimited.")
+                }
+                Section("Look & sound") {
+                    TextField("Welcome message (optional)", text: $s.welcomeMessage, axis: .vertical)
                     Toggle("Mirror preview (photos are never mirrored)", isOn: $s.mirrorPreview)
                     Toggle("Framing guides", isOn: $s.showFramingGuides)
                     Toggle("Fill screen with preview (crops edges)", isOn: $s.fillScreenPreview)
-                    Toggle("Allow retake", isOn: $s.allowRetake)
-                    Toggle("Offer email delivery", isOn: $s.offerEmail)
-                    Stepper("Review auto-continue: \(s.reviewTimeoutSeconds) s", value: $s.reviewTimeoutSeconds, in: 5...300, step: 5)
-                    Stepper("Return to start after: \(s.resetTimeoutSeconds) s", value: $s.resetTimeoutSeconds, in: 10...600, step: 10)
-                }
-                Section {
-                    TextField("Server URL", text: $s.serverURL)
-                        .keyboardType(.URL)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                    SecureField("API key (DEVICE_API_KEY)", text: $s.apiKey)
-                        .textInputAutocapitalization(.never)
-                        .autocorrectionDisabled()
-                    Button("Test connection") { Task { await model.checkServer() } }
-                    serverCheckRow
-                    if !s.publicBaseURL.isEmpty {
-                        LabeledContent("Gallery links use", value: s.publicBaseURL)
-                    }
-                } header: {
-                    Text("Server")
-                } footer: {
-                    Text("The API key is stored in the Keychain. Gallery links use the server's PUBLIC_BASE_URL.")
+                    Toggle("Countdown beeps and shutter sound", isOn: $s.countdownSounds)
+                    Toggle("Flash effect on capture", isOn: $s.flashEffect)
                 }
                 cameraSection
                 Section("Uploads") {
