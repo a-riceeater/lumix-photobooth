@@ -7,7 +7,7 @@ the PTP session (it issues OpenSession itself) and the transaction IDs.
 
 PTP interrupt-endpoint events are delivered by the driver through
 IPortableDevice::Advise. Events the driver does not map to a WPD event arrive
-as WPD_EVENT_MTP_VENDOR_EXTENDED_EVENTS with the event code in GUID Data1 and
+as WPD_EVENT_MTP_VENDOR_EXTENDED_EVENTS with (event code << 16) in GUID Data1 and
 the parameters in WPD_PROPERTY_MTP_EXT_EVENT_PARAMS.
 """
 from __future__ import annotations
@@ -37,7 +37,7 @@ _COMMON_FMT = "{F0422A9C-5DC8-4440-B5BD-5DF28835658A}"
 _CLIENT_FMT = "{204D9F0C-2292-4080-9F42-40664E70F859}"
 _EVENT_FMT = "{15AB1953-F817-4FEF-A921-5676E838F6E0}"
 _EVT_PARAMS_FMT = "{4D545058-EF88-4E4D-95C3-4F327F728A96}"
-# Data1 of this GUID carries the vendor event code.
+# Data1 of this GUID = (PTP event code << 16); low word observed as 0.
 _VENDOR_EVENT_TAIL = "-5738-4FF2-8445-BE3126691059}"
 
 VT_UI4 = 19
@@ -321,7 +321,7 @@ class WPDTransport(Transport):
         vals = values.QueryInterface(_types.IPortableDeviceValues)
         gid = str(vals.GetGuidValue(K_EVENT_ID)).upper()
         if gid.endswith(_VENDOR_EVENT_TAIL):
-            code = int(gid[1:9], 16)
+            code = int(gid[1:5], 16)  # Data1 = (event code << 16), verified on S5II
             try:
                 params = _collection_u32(vals.GetIUnknownValue(K_EVENT_PARAMS))
             except comtypes.COMError:
