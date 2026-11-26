@@ -30,7 +30,7 @@ Status: **USBPcap 1.5.4.0 installed** (2026-11-25, `winget install desowin.USBPc
 approved by the user). Its filter driver is not active until a reboot
 (`USBPcapCMD --extcap-interfaces` lists nothing, service stopped). It is a
 capture filter on the USB root hubs and does not replace the camera's MTP driver.
-LUMIX Tether is **not installed yet**. Planned
+LUMIX Tether **2.12 (2.12.0.5)** installed by the user (2026-11-25, `C:Program FilesPanasonicumix tether`); this is the reference implementation for all tether-tagged items. planned
 isolated captures, one file each, in `captures/tether/`:
 
 1. connect (Tether start → camera recognized)
