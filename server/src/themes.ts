@@ -129,15 +129,17 @@ export class ThemeService {
     if (existing && !existing.builder) throw badRequest("Only themes made in this page can be edited here");
     const id = existing?.id ?? this.newId(p.name);
     const version = (existing?.version ?? 0) + 1;
-    const staging = path.join(this.dir, `.staging-${id}-${randomBytes(4).toString("hex")}`);
+    // Build in a hidden staging folder (the inner folder must be named after the id),
+    // then swap it in with renames so galleries never see a half-written theme.
+    const stagingRoot = path.join(this.dir, `.staging-${randomBytes(4).toString("hex")}`);
+    const staging = path.join(stagingRoot, id);
     const final = path.join(this.dir, id);
     try {
       await this.writeFolder(staging, id, version, p, body, existing, existing?.enabled ?? true);
       if (existing) await this.toTrash(existing.id);
       await fsp.rename(staging, final);
-    } catch (e) {
-      await fsp.rm(staging, { recursive: true, force: true });
-      throw e;
+    } finally {
+      await fsp.rm(stagingRoot, { recursive: true, force: true });
     }
     this.ctx.designs.reload();
     log.info(existing ? "theme updated" : "theme created", { theme: id, version });
