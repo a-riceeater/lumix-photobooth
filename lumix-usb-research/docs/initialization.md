@@ -32,8 +32,9 @@ official software. Its purpose should be determined from Tether traffic
 indication / locking some camera menus).
 
 ## Background traffic / keepalive
-None required. A session idle for minutes with no polling remained usable
-(observed across separate CLI runs). The camera spontaneously emits C107
+None observed to be required: no test needed a periodic command, and sessions
+lasting up to ~25 s with long gaps between transactions stayed usable. A
+multi-minute idle test is PENDING. The camera spontaneously emits C107
 status events; no host response is needed except C101, which we ack with 0x9401.
 
 ## Events that require a host response
@@ -46,7 +47,7 @@ status events; no host response is needed except C101, which we ack with 0x9401.
 |---|---|---|
 | Capture target (0x940B) | **Yes** (verified) | Restore to SD when finishing so the camera behaves normally. |
 | Image quality, ISO, etc. (0x9403) | Yes (normal camera settings) | Restore after tests. |
-| Liveview size (0x9415) | Yes (verified) | |
+| Liveview size (0x9415) | Persists within a session after liveview stop (verified); across sessions INFERRED | |
 
 ## Reconnect / recovery
 See troubleshooting.md. Strategy: on any `OSError`/`COMError` from WPD or a
