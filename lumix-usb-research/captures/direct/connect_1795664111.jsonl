@@ -1,0 +1,5 @@
+{"t": 1795664111.5563092, "dt_ms": 14.75, "op": "0x9102", "params": ["0x00010001"], "phase": "none", "out_len": 0, "out_head": "", "rc": "0x2001", "rc_name": "OK", "rparams": ["0x00010001"], "in_len": 0, "in_head": ""}
+{"t": 1795664111.5583155, "dt_ms": 1.61, "op": "0x940A", "params": ["0x08000090"], "phase": "read", "out_len": 0, "out_head": "", "rc": "0x2001", "rc_name": "OK", "rparams": [], "in_len": 10, "in_head": "91000008020000000000"}
+{"t": 1795664111.5593152, "dt_ms": 1.22, "op": "0x9414", "params": ["0x0D800011"], "phase": "read", "out_len": 0, "out_head": "", "rc": "0x2001", "rc_name": "OK", "rparams": [], "in_len": 16, "in_head": "1100800d08000000e001800220001e00"}
+{"t": 1795664111.5613174, "dt_ms": 1.45, "op": "0x9414", "params": ["0x0D800012"], "phase": "read", "out_len": 0, "out_head": "", "rc": "0x2001", "rc_name": "OK", "rparams": [], "in_len": 36, "in_head": "1200800d1c00000003000800e001800220001e00d002c003fa001e00c0030005c2011e00"}
+{"t": 1795664112.5863216, "dt_ms": 24.24, "op": "0x9103", "params": ["0x00010001"], "phase": "none", "out_len": 0, "out_head": "", "rc": "0x2001", "rc_name": "OK", "rparams": [], "in_len": 0, "in_head": ""}

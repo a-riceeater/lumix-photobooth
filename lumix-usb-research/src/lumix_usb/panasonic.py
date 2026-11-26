@@ -295,3 +295,82 @@ class Camera:
                 raise PTPError(POC.LiveviewImage, r.code)
             time.sleep(0.02)
         return None
+
+    # -- focus / capture ------------------------------------------------------
+    def autofocus(self) -> Response:
+        """One-shot AF (0x9405 / 0x03000024)."""
+        return self.t.command(POC.AFAE, AF_ONESHOT)
+
+    def af_control(self, param: int) -> Response:
+        return self.t.command(POC.AFAE, param)
+
+    def release(self) -> Response:
+        return self.t.command(POC.Release, RELEASE_SHUTTER)
+
+    def capture(self, timeout: float = 15.0, want_formats=(0x3801,),
+                retry_general_error: bool = True) -> dict:
+        """Fire the shutter and wait for the new object(s).
+
+        Returns {"release_rc", "events", "objects": [(handle, ObjectInfo)], "t_*"}.
+        """
+        self.drain_events()
+        t0 = time.perf_counter()
+        r = self.release()
+        if r.code == RC.GeneralError and retry_general_error:
+            time.sleep(1.0)              # tethr: refused briefly after AF etc.
+            r = self.release()
+        t_release = time.perf_counter() - t0
+        result = {"release_rc": r.code, "events": [], "objects": [], "t_release": t_release}
+        if not r.ok:
+            return result
+        deadline = time.monotonic() + timeout
+        while time.monotonic() < deadline:
+            ev = self.wait_event({PEC.ObjectAdded, PEC.ObjectAddedSDRAM, 0x4002},
+                                 deadline - time.monotonic())
+            if ev is None:
+                break
+            result["events"].append(ev)
+            handle = ev.params[0] if ev.params else 0
+            time.sleep(0.05)             # libgphoto2: object not readable immediately
+            try:
+                info = self.object_info(handle)
+            except PTPError:
+                continue
+            if info.format == 0x3001:    # new folder, keep waiting
+                continue
+            result["objects"].append((handle, info))
+            result.setdefault("t_object", time.perf_counter() - t0)
+            if info.format in want_formats:
+                break
+        result["t_done"] = time.perf_counter() - t0
+        return result
+
+    # -- storage / objects ------------------------------------------------------
+    def storage_ids(self) -> list[int]:
+        data = self.t.read(OC.GetStorageIDs).check().data
+        n = struct.unpack_from("<I", data)[0]
+        return list(struct.unpack_from(f"<{n}I", data, 4))
+
+    def storage_info(self, sid: int) -> StorageInfo:
+        return StorageInfo.parse(self.t.read(OC.GetStorageInfo, sid).check().data)
+
+    def object_handles(self, sid: int = 0xFFFFFFFF, fmt: int = 0, parent: int = 0) -> list[int]:
+        data = self.t.read(OC.GetObjectHandles, sid, fmt, parent).check().data
+        n = struct.unpack_from("<I", data)[0]
+        return list(struct.unpack_from(f"<{n}I", data, 4))
+
+    def object_info(self, handle: int) -> ObjectInfo:
+        r = self.t.read(OC.GetObjectInfo, handle)
+        if not r.ok:
+            raise PTPError(OC.GetObjectInfo, r.code)
+        return ObjectInfo.parse(r.data)
+
+    def download(self, handle: int) -> bytes:
+        return self.t.read(OC.GetObject, handle).check().data
+
+    def download_partial(self, handle: int, size: int, chunk: int = 4 << 20) -> bytes:
+        buf = bytearray()
+        while len(buf) < size:
+            n = min(chunk, size - len(buf))
+            buf += self.t.read(OC.GetPartialObject, handle, len(buf), n).check().data
+        return bytes(buf)

@@ -1,0 +1,12 @@
+[project]
+name = "lumix-usb"
+version = "0.1.0"
+requires-python = ">=3.10"
+dependencies = ["comtypes>=1.4", "pillow>=10"]
+
+[build-system]
+requires = ["setuptools>=64"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+where = ["src"]
