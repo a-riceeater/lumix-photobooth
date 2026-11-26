@@ -1,0 +1,74 @@
+{
+  "id": "midnight-film-4",
+  "name": "Midnight Film",
+  "version": 1,
+  "description": "Black film strip with four photos and sprocket holes overlapping them (foreground overlay).",
+  "width": 1200,
+  "height": 3600,
+  "photoCount": 4,
+  "background": "background.png",
+  "foreground": "foreground.png",
+  "preview": "preview.png",
+  "backgroundColor": "#0a0a0a",
+  "photos": [
+    {
+      "index": 0,
+      "x": 150,
+      "y": 160,
+      "width": 900,
+      "height": 600,
+      "fit": "cover",
+      "radius": 12
+    },
+    {
+      "index": 1,
+      "x": 150,
+      "y": 840,
+      "width": 900,
+      "height": 600,
+      "fit": "cover",
+      "radius": 12
+    },
+    {
+      "index": 2,
+      "x": 150,
+      "y": 1520,
+      "width": 900,
+      "height": 600,
+      "fit": "cover",
+      "radius": 12
+    },
+    {
+      "index": 3,
+      "x": 150,
+      "y": 2200,
+      "width": 900,
+      "height": 600,
+      "fit": "cover",
+      "radius": 12
+    }
+  ],
+  "texts": [
+    {
+      "text": "{eventName}",
+      "x": 0,
+      "y": 3100,
+      "width": 1200,
+      "align": "center",
+      "fontSize": 84,
+      "fontWeight": "bold",
+      "color": "#fafafa",
+      "fontFamily": "Helvetica, Arial, sans-serif"
+    },
+    {
+      "text": "{date}",
+      "x": 0,
+      "y": 3220,
+      "width": 1200,
+      "align": "center",
+      "fontSize": 48,
+      "color": "#a1a1aa",
+      "fontFamily": "Helvetica, Arial, sans-serif"
+    }
+  ]
+}

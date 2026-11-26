@@ -34,7 +34,8 @@ describe("design validation", () => {
     expect(reg.list().length).toBeGreaterThanOrEqual(5);
     expect(reg.getProblems().flatMap((p) => p.errors)).toEqual([]);
     expect(reg.compatible(3).every((d) => d.photoCount === 3)).toBe(true);
-    expect(reg.compatible(4).map((d) => d.id)).toEqual(["grid-four"]);
+    expect(reg.compatible(4).map((d) => d.id)).toContain("classic-white-4");
+    expect(reg.compatible(4).every((d) => d.photoCount === 4)).toBe(true);
   });
 
   it("accepts a valid design", () => {

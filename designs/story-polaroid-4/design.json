@@ -1,0 +1,67 @@
+{
+  "id": "story-polaroid-4",
+  "name": "Story Polaroids",
+  "version": 1,
+  "description": "9:16 social story with four tilted instant-film photos.",
+  "width": 1080,
+  "height": 1920,
+  "photoCount": 4,
+  "background": "background.png",
+  "foreground": null,
+  "preview": "preview.png",
+  "photos": [
+    {
+      "index": 0,
+      "x": 150,
+      "y": 230,
+      "width": 600,
+      "height": 400,
+      "fit": "cover",
+      "rotation": -4,
+      "radius": 6
+    },
+    {
+      "index": 1,
+      "x": 330,
+      "y": 640,
+      "width": 600,
+      "height": 400,
+      "fit": "cover",
+      "rotation": 3,
+      "radius": 6
+    },
+    {
+      "index": 2,
+      "x": 150,
+      "y": 1050,
+      "width": 600,
+      "height": 400,
+      "fit": "cover",
+      "rotation": -3,
+      "radius": 6
+    },
+    {
+      "index": 3,
+      "x": 330,
+      "y": 1460,
+      "width": 600,
+      "height": 400,
+      "fit": "cover",
+      "rotation": 2,
+      "radius": 6
+    }
+  ],
+  "texts": [
+    {
+      "text": "{eventName}",
+      "x": 0,
+      "y": 150,
+      "width": 1080,
+      "align": "center",
+      "fontSize": 72,
+      "fontWeight": "bold",
+      "color": "#3b0764",
+      "fontFamily": "Helvetica, Arial, sans-serif"
+    }
+  ]
+}
