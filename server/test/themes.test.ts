@@ -40,6 +40,25 @@ describe("single-column layout", () => {
     expect(texts.every((t) => (t.y as number) < 600)).toBe(true);
   });
 
+  it("places photos at a fixed top margin instead of centring them", () => {
+    const centred = layoutSingleColumn(normalizeParams({ name: "x" })).photos;
+    const top = layoutSingleColumn(normalizeParams({ name: "x", topMargin: 300 })).photos;
+    expect(top[0].y).toBe(300);
+    expect(centred[0].y).not.toBe(300);
+    // fill: the photos use everything from the top margin down to the bottom margin of the photo area
+    const fill = layoutSingleColumn(normalizeParams({ name: "x", topMargin: 300, photoShape: "fill" })).photos;
+    expect(fill[0].y).toBe(300);
+    expect(fill[2].y + fill[2].height).toBeGreaterThan(3600 - 600 - 60 - 3);
+    expect(normalizeParams({ name: "x", topMargin: "" }).topMargin).toBeNull();
+    expect(() => normalizeParams({ name: "x", topMargin: -5 })).toThrow(/topMargin/);
+  });
+
+  it("drops the text block entirely when text is off", () => {
+    const { photos, texts } = layoutSingleColumn(normalizeParams({ name: "x", textPosition: "none", photoShape: "fill" }));
+    expect(texts).toEqual([]);
+    expect(photos[2].y + photos[2].height).toBe(3600 - 60); // photos reach the bottom margin
+  });
+
   it("rejects bad input with readable messages", () => {
     expect(() => normalizeParams({ name: "" })).toThrow(/name/);
     expect(() => normalizeParams({ name: "x", photoCount: 20 })).toThrow(/photoCount/);

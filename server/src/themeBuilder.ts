@@ -20,6 +20,8 @@ export interface SingleColumnParams {
   margin: number;
   /** Space between photos, px. */
   gap: number;
+  /** Distance from the top of the photo area to the first photo, px; null = centred. */
+  topMargin: number | null;
   /** keep = 3:2 photos, no cropping; fill = photos stretch to the column (cropped). */
   photoShape: PhotoShape;
   cornerRadius: number;
@@ -46,6 +48,7 @@ export const SINGLE_COLUMN_DEFAULTS: SingleColumnParams = {
   photoCount: 3,
   margin: 60,
   gap: 60,
+  topMargin: null,
   photoShape: "keep",
   cornerRadius: 0,
   backgroundColor: "#ffffff",
@@ -102,6 +105,13 @@ export function normalizeParams(input: unknown): SingleColumnParams {
   num("photoCount", 1, 8);
   num("margin", 0, 2000);
   num("gap", 0, 2000);
+  if (raw.topMargin === null || raw.topMargin === "" || raw.topMargin === undefined) {
+    p.topMargin = raw.topMargin === undefined ? p.topMargin : null;
+  } else {
+    const v = Number(raw.topMargin);
+    if (!Number.isFinite(v) || v < 0 || v > 4000) throw badRequest("topMargin must be between 0 and 4000 (or empty for centred)");
+    p.topMargin = Math.round(v);
+  }
   num("cornerRadius", 0, 500);
   num("textAreaHeight", 0, 4000);
   num("titleSize", 8, 600);
@@ -143,7 +153,9 @@ export function layoutSingleColumn(p: SingleColumnParams): BuiltLayout {
   const areaTop = p.textPosition === "top" ? textH : 0;
   const areaH = p.height - textH;
   const colW = p.width - 2 * p.margin;
-  const availH = areaH - 2 * p.margin - (p.photoCount - 1) * p.gap;
+  // With a top margin the photos start there and may use the space down to the bottom margin.
+  const top = p.topMargin ?? p.margin;
+  const availH = areaH - top - p.margin - (p.photoCount - 1) * p.gap;
   if (colW < 20 || availH < 20 * p.photoCount) {
     throw badRequest("The photos don't fit: reduce the margins, gap, text area or number of photos, or make the canvas larger");
   }
@@ -156,7 +168,9 @@ export function layoutSingleColumn(p: SingleColumnParams): BuiltLayout {
   photoW = Math.floor(photoW);
   photoH = Math.floor(photoH);
   const blockH = p.photoCount * photoH + (p.photoCount - 1) * p.gap;
-  const y0 = Math.round(areaTop + (areaH - blockH) / 2);
+  const y0 = p.topMargin === null
+    ? Math.round(areaTop + (areaH - blockH) / 2)
+    : areaTop + p.topMargin;
   const x = Math.round((p.width - photoW) / 2);
   const photos = Array.from({ length: p.photoCount }, (_, i) => ({
     index: i,

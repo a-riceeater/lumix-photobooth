@@ -23,9 +23,10 @@ Folders starting with `_` or `.` are ignored (handy for drafts).
 * **Background image** — any PNG/JPEG/WebP; it is cropped to fill the canvas (never stretched). The original
   upload is kept as `background-source.png`, so changing the canvas later re-crops it cleanly.
 * **Overlay** — an optional transparent PNG drawn on top of the photos (frames, stickers, logos).
-* **Photos** — how many (1–8), outer margin, gap, rounded corners, and the shape: *Keep 3:2* (whole photo, the
+* **Photos** — how many (1–8), outer margin, gap, rounded corners, an optional **top margin** (distance from
+  the top to the first photo; empty = the photos are centred), and the shape: *Keep 3:2* (whole photo, the
   column shrinks to fit) or *Fill the column* (photos stretch to the available height and are cropped).
-* **Text** — title and subtitle (`{eventName}`, `{date}`, `{time}` are filled in), above or below the photos or
+* **Text** — a *Show text* switch (off = no text and no text area), title and subtitle (`{eventName}`, `{date}`, `{time}` are filled in), above or below the photos or
   none, the height of the text area, font, sizes and colours.
 
 A preview with sample photos updates as you type. *Save theme* writes a normal design folder

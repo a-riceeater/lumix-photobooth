@@ -110,8 +110,12 @@
     for (const el of form.elements) {
       if (!el.name || !(el.name in p)) continue;
       if (el.type === "checkbox") el.checked = Boolean(p[el.name]);
-      else el.value = p[el.name];
+      else el.value = p[el.name] ?? "";
     }
+    const textOn = p.textPosition !== "none";
+    $("b-showtext").checked = textOn;
+    if (!textOn) $("b-textpos").value = "bottom";
+    syncTextFields();
     syncPreset();
     $("builder-title").textContent = theme ? `Edit “${theme.name}”` : "New single-column theme";
     $("builder-error").textContent = "";
@@ -134,6 +138,8 @@
       else p[el.name] = el.value;
     }
     if (!p.name) p.name = "Untitled theme";
+    p.topMargin = $("b-top").value === "" ? null : Number($("b-top").value);
+    if (!$("b-showtext").checked) p.textPosition = "none";
     return p;
   }
 
@@ -189,6 +195,11 @@
     r.onload = () => done(r.result);
     r.readAsDataURL(file);
   }
+
+  function syncTextFields() {
+    document.querySelector("#builder .text-fields").classList.toggle("off", !$("b-showtext").checked);
+  }
+  $("b-showtext").addEventListener("change", () => { syncTextFields(); schedulePreview(0); });
 
   $("new-theme").addEventListener("click", () => openBuilder(null));
   $("builder-cancel").addEventListener("click", closeBuilder);

@@ -88,11 +88,13 @@
                   <div><label for="b-shape">Shape</label><select id="b-shape" name="photoShape"><option value="keep">Keep 3:2</option><option value="fill">Fill column (crops)</option></select></div>
                   <div><label for="b-margin">Margin</label><input id="b-margin" name="margin" type="number" min="0" max="2000"></div>
                   <div><label for="b-gap">Gap</label><input id="b-gap" name="gap" type="number" min="0" max="2000"></div>
-                  <div><label for="b-radius">Corners</label><input id="b-radius" name="cornerRadius" type="number" min="0" max="500"></div></div>
+                  <div><label for="b-radius">Corners</label><input id="b-radius" name="cornerRadius" type="number" min="0" max="500"></div>
+                  <div><label for="b-top">Top margin</label><input id="b-top" name="topMargin" type="number" min="0" max="4000" placeholder="centred"></div></div>
               </fieldset>
               <fieldset>
-                <legend>Text</legend>
-                <div class="row"><div><label for="b-textpos">Position</label><select id="b-textpos" name="textPosition"><option value="bottom">Below photos</option><option value="top">Above photos</option><option value="none">No text</option></select></div>
+                <legend><label class="check legend-check"><input id="b-showtext" type="checkbox" checked> Show text</label></legend>
+                <div class="text-fields">
+                <div class="row"><div><label for="b-textpos">Position</label><select id="b-textpos" name="textPosition"><option value="bottom">Below photos</option><option value="top">Above photos</option></select></div>
                   <div><label for="b-textarea">Area height</label><input id="b-textarea" name="textAreaHeight" type="number" min="0" max="4000"></div>
                   <div><label for="b-font">Font</label><select id="b-font" name="fontFamily"></select></div>
                   <div><label class="check"><input id="b-bold" name="bold" type="checkbox"> Bold title</label></div></div>
@@ -102,6 +104,7 @@
                 <div class="row"><div class="wide"><label for="b-subtitle">Subtitle</label><input id="b-subtitle" name="subtitle" maxlength="120"></div>
                   <div><label for="b-subsize">Size</label><input id="b-subsize" name="subtitleSize" type="number" min="8" max="600"></div>
                   <div><label for="b-subcolor">Colour</label><input id="b-subcolor" name="subtitleColor" type="color"></div></div>
+                </div>
               </fieldset>
               <p class="error" id="builder-error"></p>
               <div class="actions">
