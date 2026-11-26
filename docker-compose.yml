@@ -17,8 +17,9 @@ services:
       - "8080:8080"
     volumes:
       - photobooth-data:/data
-      # Edit designs without rebuilding the image:
-      - ./designs:/app/designs:ro
+      # Designs folder: edit by hand or with Admin ▸ Themes (needs write access;
+      # the container runs as uid 1000, so `chown -R 1000 designs` on the host).
+      - ./designs:/app/designs
       # Keep photos on a different disk:
       # - /mnt/bigdisk/photobooth-photos:/photos
 

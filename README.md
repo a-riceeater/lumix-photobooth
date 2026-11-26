@@ -200,7 +200,9 @@ retention setting and only after verified sync, and are always accessible in the
 Folder-based templates (`design.json` + PNG background/foreground/preview); dropping a folder in `designs/`
 registers it — no code changes. Supports 2×6 strips, 9:16 stories, squares, printable 4×6 and any canvas size,
 with cover/contain fitting, rounded corners, rotation, transparent foreground overlays and text with
-`{eventName}`/`{date}`/`{time}`. Six examples are included. Full reference and a Photoshop/Affinity/Canva
+`{eventName}`/`{date}`/`{time}`. Examples for 3- and 4-photo sessions are included. **Admin ▸ Themes** lists
+every theme with its preview (hide/show, delete) and has a builder for single-column themes: pick the canvas,
+upload a background image and optional overlay, set photo count, spacing and text, watch the live preview, save. Full reference and a Photoshop/Affinity/Canva
 workflow: [docs/designs.md](docs/designs.md).
 
 ```bash

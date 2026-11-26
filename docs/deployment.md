@@ -31,7 +31,8 @@ sudo systemctl daemon-reload && sudo systemctl enable --now photobooth
 journalctl -u photobooth -f
 ```
 
-If `PHOTOS_DIR` is outside `/opt/photobooth/server/data`, add it to `ReadWritePaths=` in the unit.
+If `PHOTOS_DIR` is outside `/opt/photobooth/server/data`, add it to `ReadWritePaths=` in the unit. The unit
+also allows writing `/opt/photobooth/designs`, which *Admin ▸ Themes* needs.
 `sudo systemctl reload photobooth` reloads designs without a restart.
 
 ## Docker (optional)
@@ -43,7 +44,8 @@ docker compose logs -f
 ```
 
 * Data (SQLite + photos) lives in the `photobooth-data` volume at `/data`.
-* `./designs` is bind-mounted read-only, so design edits need no rebuild.
+* `./designs` is bind-mounted (writable, for *Admin ▸ Themes*); run `sudo chown -R 1000 designs` once so the
+  container user can write to it. Design edits never need a rebuild.
 * To keep photos on another disk, uncomment the `PHOTOS_DIR` lines in `docker-compose.yml`.
 * Without Compose: `docker build -f server/Dockerfile -t photobooth-server .` from the repository root, then
   `docker run -d -p 8080:8080 --env-file server/.env -e DATA_DIR=/data -v pbdata:/data photobooth-server`.

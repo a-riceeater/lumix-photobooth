@@ -15,6 +15,29 @@ designs/
 
 Folders starting with `_` or `.` are ignored (handy for drafts).
 
+## Making a theme in the admin page (no files to edit)
+
+*Admin ▸ Themes ▸ New single-column theme* builds a design for you:
+
+* **Canvas** — 2×6 strip, 4×6 portrait, 9:16 story or a custom size, plus a background colour.
+* **Background image** — any PNG/JPEG/WebP; it is cropped to fill the canvas (never stretched). The original
+  upload is kept as `background-source.png`, so changing the canvas later re-crops it cleanly.
+* **Overlay** — an optional transparent PNG drawn on top of the photos (frames, stickers, logos).
+* **Photos** — how many (1–8), outer margin, gap, rounded corners, and the shape: *Keep 3:2* (whole photo, the
+  column shrinks to fit) or *Fill the column* (photos stretch to the available height and are cropped).
+* **Text** — title and subtitle (`{eventName}`, `{date}`, `{time}` are filled in), above or below the photos or
+  none, the height of the text area, font, sizes and colours.
+
+A preview with sample photos updates as you type. *Save theme* writes a normal design folder
+(`designs/<theme-id>/design.json` + PNGs + `preview.png`); the builder settings are stored in `design.json`
+under `"builder"`, so *Edit* reopens them. Saving an edit bumps `version` (so cached strips re-render) and moves
+the previous version to `designs/_trash/`. Every theme — built-in or made here — can be **hidden** (stays
+installed, not offered to guests or the booth; stored as `"enabled": false`) or **deleted** (moved to
+`designs/_trash/`, restorable by moving it back). Themes made by hand can be hidden or deleted but are edited in
+their files.
+
+The server needs write access to `DESIGNS_DIR` for this (see `docs/deployment.md`).
+
 ## Rendering order
 
 1. `backgroundColor`, then `background.png` stretched to the canvas

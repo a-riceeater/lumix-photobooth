@@ -24,7 +24,7 @@ COPY --from=build /app/server/node_modules ./node_modules
 COPY --from=build /app/server/dist ./dist
 COPY server/package.json ./
 COPY server/public ./public
-COPY designs /app/designs
+COPY --chown=node:node designs /app/designs
 RUN mkdir -p /data && chown node:node /data
 USER node
 VOLUME ["/data"]

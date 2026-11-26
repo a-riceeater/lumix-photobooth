@@ -28,7 +28,7 @@ NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/opt/photobooth/server/data
+ReadWritePaths=/opt/photobooth/server/data /opt/photobooth/designs
 # Add the PHOTOS_DIR here too if it lives elsewhere, e.g.:
 # ReadWritePaths=/mnt/photos
 
