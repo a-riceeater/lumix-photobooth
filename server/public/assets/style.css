@@ -124,7 +124,7 @@ footer { margin-top: 48px; font-size: 13px; color: var(--muted); text-align: cen
 .segmented button[aria-pressed="true"] { background: var(--accent); color: var(--accent-text); }
 /* Strips: equal height, each as wide as its strip, so the gap is the only space between them. */
 .grid[data-view="strips"] { display: flex; flex-wrap: wrap; gap: 12px; }
-.grid[data-view="strips"] a.tile { aspect-ratio: auto; height: 340px; background: transparent; border-radius: 6px; }
+.grid[data-view="strips"] a.tile { aspect-ratio: auto; height: 340px; min-width: 80px; background: transparent; border-radius: 6px; }
 .grid[data-view="strips"] a.tile img { height: 100%; width: auto; object-fit: contain; }
 @media (max-width: 600px) { .grid[data-view="strips"] a.tile { height: 260px; } }
 
