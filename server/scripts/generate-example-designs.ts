@@ -34,12 +34,12 @@ const specs: Spec[] = [
       background: "background.png", foreground: null, preview: "preview.png",
       photos: slots3(60, 60, 1080, 720, 60),
       texts: [
-        { text: "{eventName}", x: 60, y: 2620, width: 1080, align: "center", fontSize: 92, fontWeight: "bold", color: "#18181b", fontFamily: "Georgia, serif" },
-        { text: "{date}", x: 60, y: 2760, width: 1080, align: "center", fontSize: 56, color: "#71717a", fontFamily: "Helvetica, Arial, sans-serif" },
+        { text: "{eventName}", x: 60, y: 2930, width: 1080, align: "center", fontSize: 92, fontWeight: "bold", color: "#18181b", fontFamily: "Georgia, serif" },
+        { text: "{date}", x: 60, y: 3060, width: 1080, align: "center", fontSize: 56, color: "#71717a", fontFamily: "Helvetica, Arial, sans-serif" },
       ],
     },
     background: svg(1200, 3600, `<rect width="100%" height="100%" fill="#ffffff"/><rect x="24" y="24" width="1152" height="3552" fill="none" stroke="#e4e4e7" stroke-width="4"/>
-      <line x1="420" y1="2860" x2="780" y2="2860" stroke="#d4d4d8" stroke-width="4"/>`),
+      <line x1="420" y1="3140" x2="780" y2="3140" stroke="#d4d4d8" stroke-width="4"/>`),
   },
   {
     json: {
@@ -50,8 +50,8 @@ const specs: Spec[] = [
       backgroundColor: "#0a0a0a",
       photos: slots3(130, 200, 940, 627, 120, { radius: 12 }),
       texts: [
-        { text: "{eventName}", x: 0, y: 2700, width: 1200, align: "center", fontSize: 84, fontWeight: "bold", color: "#fafafa", fontFamily: "Helvetica, Arial, sans-serif" },
-        { text: "{date}", x: 0, y: 2820, width: 1200, align: "center", fontSize: 48, color: "#a1a1aa", fontFamily: "Helvetica, Arial, sans-serif" },
+        { text: "{eventName}", x: 0, y: 2960, width: 1200, align: "center", fontSize: 84, fontWeight: "bold", color: "#fafafa", fontFamily: "Helvetica, Arial, sans-serif" },
+        { text: "{date}", x: 0, y: 3080, width: 1200, align: "center", fontSize: 48, color: "#a1a1aa", fontFamily: "Helvetica, Arial, sans-serif" },
       ],
     },
     background: svg(1200, 3600, `<rect width="100%" height="100%" fill="#0a0a0a"/>`),
@@ -138,10 +138,10 @@ const polaroidFrames = (slots: { x: number; y: number; width: number; height: nu
   }).join("");
 
 const storySlots4 = [
-  { index: 0, x: 150, y: 230, width: 600, height: 400, fit: "cover", rotation: -4, radius: 6 },
-  { index: 1, x: 330, y: 640, width: 600, height: 400, fit: "cover", rotation: 3, radius: 6 },
-  { index: 2, x: 150, y: 1050, width: 600, height: 400, fit: "cover", rotation: -3, radius: 6 },
-  { index: 3, x: 330, y: 1460, width: 600, height: 400, fit: "cover", rotation: 2, radius: 6 },
+  { index: 0, x: 150, y: 230, width: 570, height: 380, fit: "cover", rotation: -4, radius: 6 },
+  { index: 1, x: 360, y: 640, width: 570, height: 380, fit: "cover", rotation: 3, radius: 6 },
+  { index: 2, x: 150, y: 1050, width: 570, height: 380, fit: "cover", rotation: -3, radius: 6 },
+  { index: 3, x: 360, y: 1460, width: 570, height: 380, fit: "cover", rotation: 2, radius: 6 },
 ];
 
 const slots4 = (x: number, y0: number, w: number, h: number, gap: number, extra: Record<string, unknown> = {}) =>
@@ -156,14 +156,14 @@ specs.push(
       description: "Traditional 2×6 strip: four photos on white with the event name underneath.",
       width: 1200, height: 3600, photoCount: 4,
       background: "background.png", foreground: null, preview: "preview.png",
-      photos: slots4(90, 60, 1020, 680, 50),
+      photos: slots4(60, 60, 1080, 675, 60),
       texts: [
-        { text: "{eventName}", x: 60, y: 3190, width: 1080, align: "center", fontSize: 92, fontWeight: "bold", color: "#18181b", fontFamily: "Georgia, serif" },
-        { text: "{date}", x: 60, y: 3320, width: 1080, align: "center", fontSize: 56, color: "#71717a", fontFamily: "Helvetica, Arial, sans-serif" },
+        { text: "{eventName}", x: 60, y: 3230, width: 1080, align: "center", fontSize: 92, fontWeight: "bold", color: "#18181b", fontFamily: "Georgia, serif" },
+        { text: "{date}", x: 60, y: 3350, width: 1080, align: "center", fontSize: 56, color: "#71717a", fontFamily: "Helvetica, Arial, sans-serif" },
       ],
     },
     background: svg(1200, 3600, `<rect width="100%" height="100%" fill="#ffffff"/><rect x="24" y="24" width="1152" height="3552" fill="none" stroke="#e4e4e7" stroke-width="4"/>
-      <line x1="420" y1="3410" x2="780" y2="3410" stroke="#d4d4d8" stroke-width="4"/>`),
+      <line x1="420" y1="3430" x2="780" y2="3430" stroke="#d4d4d8" stroke-width="4"/>`),
   },
   {
     json: {
@@ -172,10 +172,10 @@ specs.push(
       width: 1200, height: 3600, photoCount: 4,
       background: "background.png", foreground: "foreground.png", preview: "preview.png",
       backgroundColor: "#0a0a0a",
-      photos: slots4(150, 160, 900, 600, 80, { radius: 12 }),
+      photos: slots4(130, 100, 940, 660, 40, { radius: 12 }),
       texts: [
-        { text: "{eventName}", x: 0, y: 3100, width: 1200, align: "center", fontSize: 84, fontWeight: "bold", color: "#fafafa", fontFamily: "Helvetica, Arial, sans-serif" },
-        { text: "{date}", x: 0, y: 3220, width: 1200, align: "center", fontSize: 48, color: "#a1a1aa", fontFamily: "Helvetica, Arial, sans-serif" },
+        { text: "{eventName}", x: 0, y: 3200, width: 1200, align: "center", fontSize: 84, fontWeight: "bold", color: "#fafafa", fontFamily: "Helvetica, Arial, sans-serif" },
+        { text: "{date}", x: 0, y: 3320, width: 1200, align: "center", fontSize: 48, color: "#a1a1aa", fontFamily: "Helvetica, Arial, sans-serif" },
       ],
     },
     background: specs.find((s) => s.json.id === "midnight-film")!.background,
@@ -222,17 +222,17 @@ specs.push(
       width: 1800, height: 1200, photoCount: 4,
       background: "background.png", foreground: null, preview: "preview.png",
       photos: [
-        { index: 0, x: 320, y: 40, width: 560, height: 373, fit: "cover" },
-        { index: 1, x: 920, y: 40, width: 560, height: 373, fit: "cover" },
-        { index: 2, x: 320, y: 453, width: 560, height: 373, fit: "cover" },
-        { index: 3, x: 920, y: 453, width: 560, height: 373, fit: "cover" },
+        { index: 0, x: 50, y: 50, width: 780, height: 520, fit: "cover" },
+        { index: 1, x: 870, y: 50, width: 780, height: 520, fit: "cover" },
+        { index: 2, x: 50, y: 610, width: 780, height: 520, fit: "cover" },
+        { index: 3, x: 870, y: 610, width: 780, height: 520, fit: "cover" },
       ],
       texts: [
-        { text: "{eventName}", x: 50, y: 980, width: 1700, align: "center", fontSize: 96, fontWeight: "bold", color: "#1e3a8a", fontFamily: "Georgia, serif" },
-        { text: "{date}", x: 50, y: 1090, width: 1700, align: "center", fontSize: 48, color: "#64748b", fontFamily: "Helvetica, Arial, sans-serif" },
+        { text: "{eventName}", x: 1665, y: 590, width: 130, align: "center", fontSize: 56, fontWeight: "bold", color: "#1e3a8a", fontFamily: "Georgia, serif", rotation: -90 },
+        { text: "{date}", x: 1707, y: 590, width: 130, align: "center", fontSize: 30, color: "#64748b", fontFamily: "Helvetica, Arial, sans-serif", rotation: -90 },
       ],
     },
-    background: svg(1800, 1200, `<rect width="100%" height="100%" fill="#f8fafc"/><rect x="50" y="866" width="1700" height="4" fill="#cbd5e1"/>`),
+    background: svg(1800, 1200, `<rect width="100%" height="100%" fill="#f8fafc"/><rect x="1668" y="50" width="3" height="1080" fill="#cbd5e1"/>`),
   },
 );
 

@@ -43,7 +43,7 @@
     {
       "text": "{eventName}",
       "x": 0,
-      "y": 2700,
+      "y": 2960,
       "width": 1200,
       "align": "center",
       "fontSize": 84,
@@ -54,7 +54,7 @@
     {
       "text": "{date}",
       "x": 0,
-      "y": 2820,
+      "y": 3080,
       "width": 1200,
       "align": "center",
       "fontSize": 48,

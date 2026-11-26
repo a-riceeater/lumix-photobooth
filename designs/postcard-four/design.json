@@ -12,58 +12,60 @@
   "photos": [
     {
       "index": 0,
-      "x": 320,
-      "y": 40,
-      "width": 560,
-      "height": 373,
+      "x": 50,
+      "y": 50,
+      "width": 780,
+      "height": 520,
       "fit": "cover"
     },
     {
       "index": 1,
-      "x": 920,
-      "y": 40,
-      "width": 560,
-      "height": 373,
+      "x": 870,
+      "y": 50,
+      "width": 780,
+      "height": 520,
       "fit": "cover"
     },
     {
       "index": 2,
-      "x": 320,
-      "y": 453,
-      "width": 560,
-      "height": 373,
+      "x": 50,
+      "y": 610,
+      "width": 780,
+      "height": 520,
       "fit": "cover"
     },
     {
       "index": 3,
-      "x": 920,
-      "y": 453,
-      "width": 560,
-      "height": 373,
+      "x": 870,
+      "y": 610,
+      "width": 780,
+      "height": 520,
       "fit": "cover"
     }
   ],
   "texts": [
     {
       "text": "{eventName}",
-      "x": 50,
-      "y": 980,
-      "width": 1700,
+      "x": 1665,
+      "y": 590,
+      "width": 130,
       "align": "center",
-      "fontSize": 96,
+      "fontSize": 56,
       "fontWeight": "bold",
       "color": "#1e3a8a",
-      "fontFamily": "Georgia, serif"
+      "fontFamily": "Georgia, serif",
+      "rotation": -90
     },
     {
       "text": "{date}",
-      "x": 50,
-      "y": 1090,
-      "width": 1700,
+      "x": 1707,
+      "y": 590,
+      "width": 130,
       "align": "center",
-      "fontSize": 48,
+      "fontSize": 30,
       "color": "#64748b",
-      "fontFamily": "Helvetica, Arial, sans-serif"
+      "fontFamily": "Helvetica, Arial, sans-serif",
+      "rotation": -90
     }
   ]
 }

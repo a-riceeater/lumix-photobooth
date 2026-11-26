@@ -12,34 +12,34 @@
   "photos": [
     {
       "index": 0,
-      "x": 90,
+      "x": 60,
       "y": 60,
-      "width": 1020,
-      "height": 680,
+      "width": 1080,
+      "height": 675,
       "fit": "cover"
     },
     {
       "index": 1,
-      "x": 90,
-      "y": 790,
-      "width": 1020,
-      "height": 680,
+      "x": 60,
+      "y": 795,
+      "width": 1080,
+      "height": 675,
       "fit": "cover"
     },
     {
       "index": 2,
-      "x": 90,
-      "y": 1520,
-      "width": 1020,
-      "height": 680,
+      "x": 60,
+      "y": 1530,
+      "width": 1080,
+      "height": 675,
       "fit": "cover"
     },
     {
       "index": 3,
-      "x": 90,
-      "y": 2250,
-      "width": 1020,
-      "height": 680,
+      "x": 60,
+      "y": 2265,
+      "width": 1080,
+      "height": 675,
       "fit": "cover"
     }
   ],
@@ -47,7 +47,7 @@
     {
       "text": "{eventName}",
       "x": 60,
-      "y": 3190,
+      "y": 3230,
       "width": 1080,
       "align": "center",
       "fontSize": 92,
@@ -58,7 +58,7 @@
     {
       "text": "{date}",
       "x": 60,
-      "y": 3320,
+      "y": 3350,
       "width": 1080,
       "align": "center",
       "fontSize": 56,
