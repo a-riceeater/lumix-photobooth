@@ -1,0 +1,13 @@
+.DS_Store
+node_modules/
+server/dist/
+server/data/
+server/.env
+server/coverage/
+designs/**/out/
+ios/*.xcodeproj/
+ios/PhotoBooth/Config/Local.xcconfig
+ios/build/
+ios/DerivedData/
+*.xcuserstate
+xcuserdata/
