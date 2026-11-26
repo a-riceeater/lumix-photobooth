@@ -84,3 +84,32 @@ per session: stopstream → playmode → wait 1 s → get_content_info (total N)
 * Never send `startstream` while a stream is already running; keep the UDP listener open
   for as long as the camera may be streaming; `stopstream` before switching to playback.
 * Browse only `StartingIndex=N-k` with a small count — never list from 0.
+
+## Session 3 — 2026-11-26: the app's own Swift code against the camera
+
+The iOS camera files (`LumixWiFiProtocol`, `LumixWiFiClient`, `WiFiLiveViewReceiver`,
+`LumixWiFiCameraService`) compiled unchanged into a macOS command-line harness and driven
+like a booth session (connect → 3 captures → `collectPhotos(3)` → hold the session).
+
+| Run | Outcome | Lesson |
+|---|---|---|
+| 1 | READY in 2.6 s, but shot 1: no card write | keepalive's mode restore ran concurrently with the capture → **camera operations must be serialized** |
+| 2 | Shot 1: no card write | the **first getstate after pairing reported `rec` but the camera was in `play`**; in play both `startstream` and `capture` are silently ignored (0 fps, no write) → **check the mode fresh before every capture** and again 1.5 s after the stream starts |
+| 3 | `recmode` → `err_critical` (5.2 s), no `rec` in 20 s; re-pair → `recmode` → `err_busy` → **halted** | the camera was showing **"not connected to app"** after the previous short-lived run released its session; a dialog on the body blocks mode changes. Body fine. The booth app holds one session for its lifetime, so this is a test-harness artefact |
+| 4 | ✅ **full success** | see below |
+
+Run 4 (after the message on the camera was dismissed):
+
+```
+pair (silent, remembered client) → device_name ok → startstream ok
+→ 1.5 s later: play → stopstream ok (516 ms) → recmode ok (513 ms) → startstream ok
+READY 4.09 s, live view 30.5 fps (640×432)
+capture ×3: ok (36–124 ms), card write finished after 2.04–2.09 s each
+collect: stopstream → playmode ok (1235 ms) → get_content_info (17 ms)
+         → Browse 10+1, 11+1, 12+1 (57–69 ms each) → P1542446/47/48.JPG
+         → GET DO…JPG ×3: 8.6–8.7 MB, 3.4–3.6 s each (24.9 MB in 13.7 s)
+         → recmode ok (525 ms) → startstream ok → rec, 30.5 fps
+```
+
+All three files: 6000×4000, Model DC-S5M2. `stopstream` and `setsetting device_name`
+(with the session header) are verified too.
