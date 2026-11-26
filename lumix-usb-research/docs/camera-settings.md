@@ -46,7 +46,7 @@ VERIFIED by capture results: 4 → JPG+RW2, 0 → JPG only).
 | WhiteBalance_Param 0x02000051 | 2 | 2 auto, 4 daylight, 0x8008 cloudy, 6 tungsten, 5 fluorescent, 7 flash, 0x800F shade, 0x800B–E presets, 0x8010–13 K-set 1–4, 0x8014/15 auto cool/warm — VERIFIED read (2) |
 | WhiteBalance_KSet 0x02000052 | 2 | Kelvin (5500 VERIFIED read) |
 | PhotoStyle_Param 0x02000011 | 2 | 0 Standard, 1 Vivid, 2 Natural, 3 Mono, 4 Landscape, 5 Portrait, … (tethr table) |
-| AFArea_AFModeParam 0x02000071 | 2 | 3 MF, 4 AF-S, 5 AF-C, 6 AF-F (tethr) — 3 (MF) and 4 (AFS) VERIFIED via the lever |
+| AFArea_AFModeParam 0x02000071 | 2 | 3 MF, 4 AF-S, 5 AF-C, 6 AF-F (tethr) — 3 (MF), 4 (AFS), 5 (AFC) VERIFIED via the lever |
 | CameraMode_ModePos 0x02000082 | 2 | 0 P, 1 A, 2 S, 3 M, 5 video, 7 iA, 8–10 C1–C3 (tethr) — 3 VERIFIED read |
 | ImageMode_ImageAspect 0x020000A3 | 2 | 1 4:3, 2 3:2, 3 16:9, 4 1:1, 10 65:24, 11 2:1 — 2 VERIFIED (liveview 3:2) |
 

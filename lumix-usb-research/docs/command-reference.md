@@ -154,7 +154,11 @@ Completion:      no dedicated event. Each C101 is acked with 0x9401; in the
                  focusing (0x01000012 byte 4 = 3) -> 0xFFFF finished/locked.
                  0x03000025 (lock clear) returns it to 0xFFFE.
                  AF-S: 1.38–1.67 s on the test scene.
-Verification:    VERIFIED (AF-S lever; 6 AF cycles). Focus-failure value PENDING.
+AF-C (lever AFC, af_mode 5): same 0xFFFE -> 0x0000 (~0.3 s) -> 0xFFFF (~1.4 s)
+                 sequence, but 0x01000012 byte 4 stays 0, and lock clear does not
+                 produce a new status dump (state keeps reading 0xFFFF).
+                 No status dumps arrive while idle (no continuous AF reporting).
+Verification:    VERIFIED (AF-S 6 cycles, AF-C 6 cycles). Focus-failure value PENDING.
 ```
 
 ### 0x940A / 0x940B — Get/Set capture target
