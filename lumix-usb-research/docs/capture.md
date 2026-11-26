@@ -31,14 +31,21 @@
 | SD | AF-S after AF lock | RAW+FINE | 2.77 s | – | capture_1795665210 |
 | PC | AF-S, no prior AF, LV on | FINE | 1.12, 1.24, 1.25 s | 0.32–0.36 s (10.7–11.3 MB) | test_booth_sequence_1795665215 |
 | PC | AF-S after `autofocus_wait` (1.38–1.67 s), LV on | FINE | 0.85, 1.11, 1.11 s | 0.30–0.35 s | test_af_capture_1795665275 |
-| PC | AF-C after `autofocus_wait` (1.25–1.36 s), LV on | FINE | 0.55, 0.81, 0.98 s | 0.31–0.35 s | test_af_modes (AFC run) |
-| PC | AF-C, release only, LV on | FINE | 0.79, 0.79, 0.80 s | 0.30–0.35 s | test_af_modes (AFC run) |
+| PC | **AF-C after corrected `autofocus_wait` (in focus 0.23–0.34 s)**, LV on | FINE | 0.55, 0.58, 0.59 s | 0.29–0.32 s | test_af_modes (2nd AFC run) |
+| PC | AF-C, release only, LV on | FINE | 0.78–0.81 s (two runs) | 0.29–0.35 s | test_af_modes (both AFC runs) |
+| (superseded) | AF-C, old wait for 0xFFFF (1.25–1.36 s) | FINE | 0.55–0.98 s | 0.31–0.35 s | test_af_modes (1st AFC run) |
 
-AF-C release-only is the fastest path (≈1.1 s release → JPEG bytes on host), but
-the camera presumably releases without waiting for focus (AF-C defaults to
-release priority) and does not focus continuously in liveview without a command
-(no AF status reported while idle). Image sharpness of those shots was **not
-checked** — prefer `autofocus_wait` + release unless focus distance is fixed.
+**Booth figure (AF-C): AF command → JPEG bytes on host ≈ 1.1–1.2 s**
+(AF 0.23–0.34 s + release→object ≈0.57 s + download ≈0.3 s), USB 2.0, LV running.
+
+AF-C release-only is equally fast (≈1.1 s total) because the release performs its
+own AF: its object arrives ≈0.25 s later than after an explicit AF, matching the
+AF time. Static-scene sharpness of release-only shots was not worse (edge-energy
+metric on a 1000 px centre crop: AF+release 23.3–24.8, release-only 28.4–30.9;
+scene-dependent, not a precise focus measure). With the lens covered the release
+was refused in AF-C, so the S5II does **not** release without focus here. An
+explicit AF step is still preferable: it reports failure (0x0004) in ~1 s
+instead of a silent missing image.
 
 Booth figure: **AF ≈1.5 s + release→JPEG ≈1.0 s + download ≈0.33 s ≈ 2.8–3.1 s**
 from "start" to JPEG bytes on the host, USB 2.0 link, liveview running.
@@ -110,6 +117,6 @@ Implemented as `Camera.capture()` + `Camera.download()` in `src/lumix_usb/panaso
   time out (we use 10–15 s) or check the AF result first.
 * The AF timings in the tables above that used `autofocus_wait` waited for
   0xFFFF (result *ended*), ~1 s later than focus was actually achieved (0x0000).
-  Re-measurement with the corrected wait is PENDING (lens uncovered).
+  Re-measured for AF-C (above); AF-S re-measurement PENDING.
 * Behaviour with no SD card inserted (both targets).
 * Burst/drive modes; `0x9113` skip; target BOTH (2).

@@ -53,6 +53,8 @@ try:
             if res["objects"]:
                 h, info = res["objects"][-1]
                 t1 = time.perf_counter(); d = cam.download(h); dl = time.perf_counter() - t1
+                (root / "samples/photos").mkdir(parents=True, exist_ok=True)
+                (root / "samples/photos" / f"afmodes_{AFMODE.get(mode, mode)}_{'af' if use_af else 'rel'}_{i}.jpg").write_bytes(d)
                 print(f"   shot {i}: release {rc_name(res['release_rc'])}, JPEG after {res['t_object']:.2f}s,"
                       f" dl {dl:.2f}s, total {af_dt + res['t_object'] + dl:.2f}s")
             else:

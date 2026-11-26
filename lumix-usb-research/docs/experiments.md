@@ -33,6 +33,7 @@ Times are local 2026-11-25. Log files: `captures/direct/<name>_<unixtime>.jsonl`
 | 26 | Lever AFC: AF ×3 status trace; AF+release ×3; release-only ×3 (PC FINE) | AF ~1.4 s, totals 2.1–2.7 s; release-only 1.09–1.15 s total; lock clear leaves state 0xFFFF | `test_af_modes_*` (AFC run) |
 | 27 | Lens covered, AFC: AF status trace, AF+release ×2, release-only ×2 | 0x01000011 = 0x0004 (new); no object/no event for all 4 releases | `test_af_failure_*` |
 | 28 | Corrected `autofocus_wait` (stop on 0x0000/0x0004), lens covered ×3 | "failed" in 0.98–1.08 s. Re-interpretation: 0x0000 = in focus, 0xFFFF = result ended (rows 22/25/26 waited ~1 s too long) | `af_fail_detect_*` |
+| 29 | Lens uncovered, AFC, corrected wait: AF+release ×3, release-only ×3, images saved | in focus 0.23–0.34 s; totals 1.11–1.21 s (AF) / 1.07–1.13 s (release-only); release-only not blurrier | `test_af_modes_*` (2nd AFC run) |
 
 ## Not attempted (by policy)
 DeleteObject, 0x9406 (format/sensor clean/firmware), 0x940D (power), 0x9606/9607
