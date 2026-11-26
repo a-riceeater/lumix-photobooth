@@ -4,3 +4,4 @@ __pycache__/
 .pytest_cache/
 samples/photos/
 captures/tmp/
+*.egg-info/
