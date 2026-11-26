@@ -153,9 +153,19 @@ and focus-mode checks), liveview polling (0x9412/0x9706), one-shot AF with the r
 (0x9405/0x9401), release (0x9404) with the documented GeneralError retry, object retrieval on C109/C108
 (GetObjectInfo/GetObject), SDRAM queue draining, and automatic reconnection after cable pulls or power cycles.
 No undocumented commands are used. Settings the app changes are restored when the camera is disconnected
-from the app. Wi-Fi is not implemented (undocumented); the `PTPTransport`/`CameraService` protocols are the
-extension points. The mock camera produces a moving liveview and 3000 × 2000 JPEGs (with optional simulated
-failures).
+from the app. The mock camera produces a moving liveview and 3000 × 2000 JPEGs (with optional simulated
+failures, and optionally Wi-Fi-style delivery after the session).
+
+**Camera over Wi-Fi** (*LUMIX S5II over Wi-Fi*): the camera joins the same network in *Remote Shooting & View →
+Via Network*; the app finds it with a subnet scan (no IP entry), pairs (silently once the camera remembers the
+app; refusals are never retried), switches it to shooting mode and shows its 30 fps UDP live view. Each photo is
+taken with `camcmd capture` (~2 s until it is on the card); after the session's last shot the booth shows
+"Bringing your photos over…", switches the camera to playback, finds the newest photos through the camera's DLNA
+ContentDirectory and downloads the full-resolution originals (~3.5 s per 9 MB photo), then returns it to
+shooting mode. Any `err_busy` or unexpected timeout stops all camera traffic until the operator checks the
+camera and taps *Reconnect* — two research probes locked the camera before these rules existed. The recipe and
+every measurement are in [docs/lan-research-log.md](docs/lan-research-log.md); it was verified end to end on the
+S5II with the app's own Swift code (compiled into a macOS harness), not yet inside the iOS app on a device.
 
 **Guest experience.** Fullscreen kiosk UI with large touch targets, optional mirrored preview (saved photos are
 never mirrored), framing guides, animated countdown, flash, per-shot thumbnails, review with retake,

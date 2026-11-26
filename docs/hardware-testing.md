@@ -30,8 +30,22 @@ must be checked on hardware before an event:
 8. **Power and link**: USB-C iPads/iPhones power the USB link only; use the camera battery/AC adapter. Lightning
    iPhones need Apple's Lightning-to-USB 3 camera adapter (with power).
 
-Wi-Fi control is not implemented: the research documents USB only, and the brief forbids undocumented commands.
-The `PTPTransport` and `CameraService` protocols are where a future transport would plug in.
+### Wi-Fi camera
+
+The Wi-Fi path (camera type *LUMIX S5II over Wi-Fi*) was verified end to end against the S5II with the app's own
+Swift camera code compiled into a macOS harness: pairing, live view (30 fps), 3 captures, transfer of three
+6000×4000 originals in 13.7 s, and the return to shooting mode (`docs/lan-research-log.md`, session 3). It has
+**not yet run inside the iOS app on an iPhone/iPad**. To test it:
+
+1. On the camera: *MENU → Setup → IN/OUT → LAN/Wi-Fi → Wi-Fi Function → New Connection → Remote Shooting & View →
+   Via Network*, choose the same Wi-Fi network as the iPhone/iPad. Image quality must include JPEG.
+2. In the app: *Settings ▸ Camera ▸ LUMIX S5II over Wi-Fi*. Allow *Local Network* access when iOS asks.
+   The first time, the camera asks to allow the device name (default "Photo Booth") — accept it.
+3. *Camera diagnostics* lists every camera command with its result. Run a session; expect ~2 s per photo and
+   ~4 s per photo during "Bringing your photos over…".
+4. If the state shows *Camera needs a check*: look at the camera (dismiss any message such as "connection
+   lost"/"not connected to app", re-arm remote shooting if needed) **before** tapping *Reconnect*.
+5. Do not open LUMIX Sync (or another app) on the same camera at the same time.
 
 ## Step 1 — iPhone with the mock camera
 
