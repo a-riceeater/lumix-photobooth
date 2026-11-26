@@ -104,7 +104,13 @@ protocol CameraService: AnyObject {
     /// Starts discovery/connection and keeps reconnecting until stopped.
     func start()
     func stop() async
-    /// Full-resolution JPEG of one new photo.
+    /// Seconds to start `prepareCapture()` ahead of the shutter (autofocus
+    /// budget for the current focus mode; 0 if nothing needs preparing).
+    var focusLeadTime: TimeInterval { get }
+    /// Optional first half of a timed capture (autofocus), so the shutter can
+    /// fire exactly on cue. A following `capture()` then skips its own AF.
+    func prepareCapture() async throws
+    /// Full-resolution JPEG of one new photo (fires the shutter immediately).
     func capture() async throws -> Data
     /// Drops and re-establishes the connection (operator action).
     func reconnect()

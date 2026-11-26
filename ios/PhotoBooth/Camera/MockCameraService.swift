@@ -95,6 +95,8 @@ final class MockCameraService: CameraService {
     @ObservationIgnored private var frameTask: Task<Void, Never>?
     @ObservationIgnored private var shotCounter = 0
     @ObservationIgnored private var capturing = false
+    /// Mimics AF-C autofocus (0.23–0.34 s measured on the S5II).
+    var focusLeadTime: TimeInterval { 0.6 }
 
     init(preferences: @escaping () -> CameraPreferences = { CameraPreferences() }) {
         self.preferences = preferences
@@ -141,6 +143,11 @@ final class MockCameraService: CameraService {
         }
     }
 
+    func prepareCapture() async throws {
+        guard state.isReady else { throw CaptureError.notConnected }
+        try await Task.sleep(nanoseconds: 300_000_000)
+    }
+
     func capture() async throws -> Data {
         guard state.isReady else { throw CaptureError.notConnected }
         guard !capturing else { throw CaptureError.busy }
@@ -149,7 +156,9 @@ final class MockCameraService: CameraService {
         let prefs = preferences()
         shotCounter += 1
         let n = shotCounter
-        try await Task.sleep(nanoseconds: 500_000_000)   // roughly the real AF + release latency
+        // The "exposure" happens now; the delay models in-camera processing and
+        // USB transfer (release → JPEG ≈ 0.55 s + 0.3 s download on the S5II).
+        try await Task.sleep(nanoseconds: 800_000_000)
         if prefs.mockFailureRate > 0, Double.random(in: 0..<1) < prefs.mockFailureRate {
             log.add("mock capture #\(n): simulated failure")
             throw CaptureError.noImage

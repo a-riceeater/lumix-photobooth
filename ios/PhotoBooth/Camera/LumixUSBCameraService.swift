@@ -31,6 +31,19 @@ final class LumixUSBCameraService: CameraService {
     @ObservationIgnored private var running = false
     @ObservationIgnored private var capturing = false
     @ObservationIgnored private var forceReconnect = false
+    /// Set by prepareCapture(): the next capture() releases without its own AF.
+    @ObservationIgnored private var prepared = false
+
+    private var autofocusEnabled: Bool {
+        preferences().options.autofocusBeforeCapture && info?.focusMode != .manual
+    }
+
+    /// AF budgets from lumix-usb-research/docs/capture.md: in focus after
+    /// 0.23–0.34 s (AF-C) / 0.45–0.63 s (AF-S), plus margin.
+    var focusLeadTime: TimeInterval {
+        guard autofocusEnabled else { return 0 }
+        return info?.focusMode == .afc ? 0.6 : 0.9
+    }
 
     init(preferences: @escaping () -> CameraPreferences = { CameraPreferences() }) {
         self.preferences = preferences
@@ -202,14 +215,39 @@ final class LumixUSBCameraService: CameraService {
 
     // MARK: Capture
 
+    func prepareCapture() async throws {
+        prepared = false
+        guard autofocusEnabled else { return }
+        guard let cam = camera, state.isReady else { throw CaptureError.notConnected }
+        let started = Date()
+        do {
+            let state = try await cam.autofocus()
+            log.add(String(format: "pre-focus: %@ in %.2f s", state.map { "\($0)" } ?? "no result", Date().timeIntervalSince(started)))
+            if state == .failed {
+                _ = try? await cam.transport.command(PanasonicOp.afControl, PanasonicParam.afLockClear)
+                throw CaptureError.focusFailed
+            }
+            prepared = true
+        } catch let error as CaptureError {
+            throw error
+        } catch let error as PTPError {
+            log.add("pre-focus failed: \(error)")   // capture() will try AF again
+        } catch {
+            await handle(error, from: cam)
+            throw CaptureError.notConnected
+        }
+    }
+
     func capture() async throws -> Data {
         guard let cam = camera, state.isReady else { throw CaptureError.notConnected }
+        let useAF = preferences().options.autofocusBeforeCapture && !prepared
+        prepared = false
         guard !capturing else { throw CaptureError.busy }
         capturing = true
         defer { capturing = false }
         let started = Date()
         do {
-            let data = try await cam.captureWithAutofocus(preferences().options.autofocusBeforeCapture)
+            let data = try await cam.captureWithAutofocus(useAF)
             log.add(String(format: "capture: %d bytes in %.2f s", data.count, Date().timeIntervalSince(started)))
             return data
         } catch let error as CaptureError {
