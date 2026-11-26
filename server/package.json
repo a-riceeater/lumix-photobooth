@@ -16,7 +16,9 @@
     "init-env": "node scripts/init-env.mjs",
     "seed": "tsx src/cli/seed.ts",
     "cli": "tsx src/cli/admin.ts",
-    "designs": "tsx src/cli/designs.ts"
+    "designs": "tsx src/cli/designs.ts",
+    "backup": "tsx src/cli/backup.ts",
+    "generate-designs": "tsx scripts/generate-example-designs.ts"
   },
   "dependencies": {
     "archiver": "^8.0.0",
