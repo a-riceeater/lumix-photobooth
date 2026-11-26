@@ -1,0 +1,4 @@
+// Copy to Local.xcconfig (git-ignored) and fill in, or set signing in Xcode.
+// Re-run ../../../scripts/bootstrap-ios.sh afterwards is not required.
+PHOTOBOOTH_BUNDLE_ID = com.yourname.photobooth
+DEVELOPMENT_TEAM = ABCDE12345
