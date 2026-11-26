@@ -13,6 +13,13 @@ from .transport.base import Transport
 
 
 class ResilientCamera:
+    """Observed on S5II/WPD (unplug, replug, power cycle; test_reconnect_1795666463):
+    in-flight READ fails with HRESULT 0x8007001F, reopening fails with 0x800701B1,
+    then the device is absent from enumeration until replugged. No
+    WPD_EVENT_DEVICE_REMOVED was delivered before the failing transaction."""
+
+    POLL_S = 0.5
+
     def __init__(self, opener: Callable[[], Transport], capture_target: Optional[int] = None,
                  liveview_setting: Optional[LiveviewSetting] = None, log=print):
         self.opener = opener
@@ -22,6 +29,8 @@ class ResilientCamera:
         self.cam: Optional[Camera] = None
         self.log = log
         self.reconnects = 0
+        self.outages: list[float] = []      # seconds from failure to session restored
+        self._down_since: Optional[float] = None
 
     def _open(self) -> Camera:
         cam = Camera(self.opener())
@@ -49,11 +58,15 @@ class ResilientCamera:
         while self.cam is None:
             try:
                 self.cam = self._open()
+                if self._down_since is not None:
+                    self.outages.append(time.monotonic() - self._down_since)
+                    self.log(f"[recovery] session restored after {self.outages[-1]:.2f}s")
+                    self._down_since = None
             except Exception as e:
                 if time.monotonic() > deadline:
                     raise
-                self.log(f"[recovery] open failed: {e!r}; retrying in 1 s")
-                time.sleep(1.0)
+                self.log(f"[recovery] open failed: {e!r}; retrying in {self.POLL_S} s")
+                time.sleep(self.POLL_S)
         return self.cam
 
     def call(self, fn: Callable[[Camera], object], retries: int = 1):
@@ -67,6 +80,7 @@ class ResilientCamera:
                     raise
                 self.log(f"[recovery] transport error {e!r}; reconnecting")
                 self.reconnects += 1
+                self._down_since = time.monotonic()
                 self.drop()
 
     def close(self) -> None:

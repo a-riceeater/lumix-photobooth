@@ -52,5 +52,5 @@ status events; no host response is needed except C101, which we ack with 0x9401.
 ## Reconnect / recovery
 See troubleshooting.md. Strategy: on any `OSError`/`COMError` from WPD or a
 `WPD_EVENT_DEVICE_REMOVED`, drop the IPortableDevice, re-enumerate every 1 s,
-reopen, re-send 0x9102, re-apply capture target and liveview state. PENDING:
-physical unplug/replug test.
+reopen, re-send 0x9102, re-apply capture target and liveview state. VERIFIED
+3/3 physical disconnects (troubleshooting.md).

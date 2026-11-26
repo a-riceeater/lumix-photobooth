@@ -39,5 +39,5 @@ try:
             frames, last = 0, time.monotonic()
 finally:
     rc.close()
-print("reconnects:", rc.reconnects, "outages (s):", [round(o, 1) for o in outages])
+print("reconnects:", rc.reconnects, "outages (s):", [round(o, 2) for o in rc.outages + outages])
 print("log:", log)

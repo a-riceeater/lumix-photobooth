@@ -17,7 +17,7 @@ UI or Swift code lives here.
 | Capture-complete detection | VERIFIED (events C108 SD / C109 PC) |
 | Full-res JPEG retrieval | VERIFIED — ~10.6 MB in ~0.3 s; AF-C: AF command → JPEG on host ≈1.1–1.2 s (PC target, JPEG FINE) |
 | Read/modify settings | VERIFIED (ISO, quality, capture target, liveview size) |
-| Recovery / reconnect | Implemented; physical unplug test PENDING |
+| Recovery / reconnect | VERIFIED — 3/3 cable pulls auto-recovered, liveview resumes at 30 fps |
 | LUMIX Tether USB traffic comparison | PENDING (USBPcap + Tether not installed) |
 
 Key result: everything runs through the **stock Windows MTP driver** using the
