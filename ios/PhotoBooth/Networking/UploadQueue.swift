@@ -21,6 +21,7 @@ final class UploadQueue {
     @ObservationIgnored private let urlSession: URLSession
     @ObservationIgnored private var loopTask: Task<Void, Never>?
     @ObservationIgnored private var wake: CheckedContinuation<Void, Never>?
+    @ObservationIgnored private var wakeRequested = false
     @ObservationIgnored private let monitor = NWPathMonitor()
     @ObservationIgnored var now: () -> Date = Date.init
     @ObservationIgnored var idleInterval: TimeInterval = 15
@@ -63,9 +64,12 @@ final class UploadQueue {
 
     /// Wake the loop (new session, new email, connectivity change).
     func trigger() {
-        let w = wake
+        guard let w = wake else {
+            wakeRequested = true   // arrived during a pass: run again right after it
+            return
+        }
         wake = nil
-        w?.resume()
+        w.resume()
     }
 
     /// Operator / connectivity: clear backoff and failed states, then run.
@@ -79,11 +83,17 @@ final class UploadQueue {
     }
 
     private func sleep(_ seconds: TimeInterval) async {
+        if wakeRequested {
+            wakeRequested = false
+            return
+        }
         await withCheckedContinuation { (c: CheckedContinuation<Void, Never>) in
             wake = c
             Task { [weak self] in
                 try? await Task.sleep(nanoseconds: UInt64(seconds * 1_000_000_000))
-                self?.trigger()
+                guard let self, let w = self.wake else { return }
+                self.wake = nil
+                w.resume()
             }
         }
     }
