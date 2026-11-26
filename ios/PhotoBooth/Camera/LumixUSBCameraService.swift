@@ -88,7 +88,8 @@ final class LumixUSBCameraService: CameraService {
                 if let device = browser.panasonicCamera {
                     await connect(device)
                 } else {
-                    if state != .searching, case .reconnecting = state {} else if state != .searching { state = .searching }
+                    // Keep showing "reconnecting" after a drop until the camera returns.
+                    if case .reconnecting = state {} else if state != .searching { state = .searching }
                     if Date().timeIntervalSince(lastLoggedSearch) > 30 {
                         log.add("no Panasonic camera visible; ImageCaptureCore sees: \(browser.allCameraDescriptions.joined(separator: ", ").isEmpty ? "nothing" : browser.allCameraDescriptions.joined(separator: ", "))")
                         lastLoggedSearch = Date()
