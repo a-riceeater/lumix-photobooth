@@ -36,7 +36,10 @@ final class FakeS5Transport: PTPTransport, @unchecked Sendable {
     }
 
     func execute(_ opcode: UInt16, params: [UInt32], outData: Data?, timeout: TimeInterval) async throws -> PTPResponse {
-        lock.lock(); defer { lock.unlock() }
+        try lock.withLock { try respond(opcode, params: params, outData: outData) }
+    }
+
+    private func respond(_ opcode: UInt16, params: [UInt32], outData: Data?) throws -> PTPResponse {
         if disconnected { throw CameraTransportError.disconnected }
         log.append(opcode)
         func ok(_ data: Data = Data()) -> PTPResponse { PTPResponse(opcode: opcode, code: PTPResponseCode.ok, data: data) }
