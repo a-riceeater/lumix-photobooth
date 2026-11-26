@@ -66,7 +66,7 @@ export class ThemeService {
         builder: d.builder,
         hasBackground: Boolean(d.background),
         hasForeground: Boolean(d.foreground),
-        previewUrl: `/api/designs/${d.id}/preview`,
+        previewUrl: `/api/designs/${d.id}/preview?v=${d.fingerprint}`,
       })),
       problems: this.ctx.designs.getProblems(),
     };

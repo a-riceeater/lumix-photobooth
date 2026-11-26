@@ -39,6 +39,71 @@
       </form>
       <p class="muted">Events are also created automatically when the booth uploads its first session.</p>
 
+      <h2>Themes</h2>
+      <p class="muted">Photo strip designs guests can pick in their gallery. Hidden themes stay installed but are not offered.</p>
+      <div class="actions"><button class="btn primary" id="new-theme" type="button">New single-column theme</button></div>
+      <div class="theme-grid" id="themes"></div>
+
+      <section class="card builder hidden" id="builder" aria-label="Theme builder">
+        <h2 id="builder-title">New theme</h2>
+        <div class="builder-layout">
+          <form id="builder-form" class="builder-form">
+            <fieldset>
+              <legend>Name</legend>
+              <label for="b-name">Theme name</label><input id="b-name" name="name" required maxlength="60">
+              <label for="b-description">Description (optional)</label><input id="b-description" name="description" maxlength="200">
+            </fieldset>
+            <fieldset>
+              <legend>Canvas</legend>
+              <label for="b-preset">Size</label>
+              <select id="b-preset">
+                <option value="1200x3600">2×6 photo strip (1200 × 3600)</option>
+                <option value="1200x1800">4×6 portrait print (1200 × 1800)</option>
+                <option value="1080x1920">Story 9:16 (1080 × 1920)</option>
+                <option value="custom">Custom…</option>
+              </select>
+              <div class="row"><div><label for="b-width">Width px</label><input id="b-width" name="width" type="number" min="300" max="8000"></div>
+                <div><label for="b-height">Height px</label><input id="b-height" name="height" type="number" min="300" max="12000"></div></div>
+              <label for="b-bgcolor">Background colour</label><input id="b-bgcolor" name="backgroundColor" type="color">
+              <label for="b-bg">Background image (PNG/JPEG, fitted to the canvas)</label><input id="b-bg" type="file" accept="image/png,image/jpeg,image/webp">
+              <label class="check"><input id="b-bg-remove" type="checkbox"> Remove current background image</label>
+              <label for="b-fg">Overlay on top of the photos (transparent PNG, optional)</label><input id="b-fg" type="file" accept="image/png,image/webp">
+              <label class="check"><input id="b-fg-remove" type="checkbox"> Remove current overlay</label>
+            </fieldset>
+            <fieldset>
+              <legend>Photos</legend>
+              <div class="row"><div><label for="b-count">Number of photos</label><input id="b-count" name="photoCount" type="number" min="1" max="8"></div>
+                <div><label for="b-shape">Photo shape</label><select id="b-shape" name="photoShape"><option value="keep">Keep 3:2 (no cropping)</option><option value="fill">Fill the column (crops)</option></select></div></div>
+              <div class="row"><div><label for="b-margin">Outer margin px</label><input id="b-margin" name="margin" type="number" min="0" max="2000"></div>
+                <div><label for="b-gap">Gap between photos px</label><input id="b-gap" name="gap" type="number" min="0" max="2000"></div>
+                <div><label for="b-radius">Rounded corners px</label><input id="b-radius" name="cornerRadius" type="number" min="0" max="500"></div></div>
+            </fieldset>
+            <fieldset>
+              <legend>Text</legend>
+              <div class="row"><div><label for="b-textpos">Position</label><select id="b-textpos" name="textPosition"><option value="bottom">Below the photos</option><option value="top">Above the photos</option><option value="none">No text</option></select></div>
+                <div><label for="b-textarea">Text area height px</label><input id="b-textarea" name="textAreaHeight" type="number" min="0" max="4000"></div></div>
+              <label for="b-title">Title <span class="muted">({eventName}, {date}, {time} are filled in)</span></label><input id="b-title" name="title" maxlength="120">
+              <label for="b-subtitle">Subtitle</label><input id="b-subtitle" name="subtitle" maxlength="120">
+              <div class="row"><div><label for="b-font">Font</label><select id="b-font" name="fontFamily"></select></div>
+                <div><label for="b-titlesize">Title size</label><input id="b-titlesize" name="titleSize" type="number" min="8" max="600"></div>
+                <div><label for="b-subsize">Subtitle size</label><input id="b-subsize" name="subtitleSize" type="number" min="8" max="600"></div></div>
+              <div class="row"><div><label for="b-color">Title colour</label><input id="b-color" name="textColor" type="color"></div>
+                <div><label for="b-subcolor">Subtitle colour</label><input id="b-subcolor" name="subtitleColor" type="color"></div>
+                <div><label class="check"><input id="b-bold" name="bold" type="checkbox"> Bold title</label></div></div>
+            </fieldset>
+            <p class="error" id="builder-error"></p>
+            <div class="actions">
+              <button class="btn primary" type="submit" id="builder-save">Save theme</button>
+              <button class="btn" type="button" id="builder-cancel">Cancel</button>
+            </div>
+          </form>
+          <div class="builder-preview">
+            <p class="muted" id="preview-status">Preview with sample photos</p>
+            <div class="strip-frame"><img id="builder-preview" alt="Theme preview"></div>
+          </div>
+        </div>
+      </section>
+
       <h2>Events</h2>
       <div id="events"></div>
     </div>
