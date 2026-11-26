@@ -1,3 +1,4 @@
+import AudioToolbox
 import CoreGraphics
 import Foundation
 import ImageIO
@@ -11,6 +12,8 @@ final class BoothController {
         case welcome
         case countdown(shot: Int, remaining: Int)
         case capturing(shot: Int)
+        /// The photo just taken, shown fullscreen for a moment.
+        case showingShot(shot: Int)
         case review
         case share
         case problem(String)
@@ -25,6 +28,8 @@ final class BoothController {
     private(set) var retryMessage: String?
     /// Seconds left before an automatic transition (review / share screens).
     private(set) var autoAdvanceRemaining: Int?
+    /// Retakes used in the current session.
+    private(set) var retakesUsed = 0
 
     @ObservationIgnored private let settings: AppSettings
     @ObservationIgnored private let store: SessionStore
@@ -44,6 +49,7 @@ final class BoothController {
     var camera: CameraService { cameraProvider() }
     var currentSession: LocalSession? { currentSessionId.flatMap { store.session($0) } }
     var totalShots: Int { max(1, min(settings.photosPerSession, 12)) }
+    var canRetake: Bool { settings.allowRetake && (settings.maxRetakes == 0 || retakesUsed < settings.maxRetakes) }
 
     // MARK: Guest actions
 
@@ -54,7 +60,8 @@ final class BoothController {
     }
 
     func retake() {
-        guard phase == .review, let id = currentSessionId else { return }
+        guard phase == .review, canRetake, let id = currentSessionId else { return }
+        retakesUsed += 1
         timerTask?.cancel()
         autoAdvanceRemaining = nil
         try? store.discardPhotosForRetake(sessionId: id)
@@ -94,6 +101,7 @@ final class BoothController {
         currentSessionId = nil
         thumbnails.removeAll()
         retryMessage = nil
+        retakesUsed = 0
         phase = .welcome
         uploads.trigger()
     }
@@ -113,6 +121,7 @@ final class BoothController {
                                          designId: settings.defaultDesignId, galleryBaseURL: settings.galleryBaseURL)
                 currentSessionId = s.id
                 thumbnails.removeAll()
+                retakesUsed = 0
             } catch {
                 await showProblem("Something went wrong. Please try again.")
                 return
@@ -123,14 +132,17 @@ final class BoothController {
         for shot in 0..<totalShots {
             var attempt = 0
             while true {
-                let countdown = attempt == 0 ? settings.countdownSeconds : min(3, settings.countdownSeconds)
+                let base = shot == 0 ? settings.countdownSeconds : settings.betweenPhotosCountdownSeconds
+                let countdown = attempt == 0 ? base : min(3, base)
                 for remaining in stride(from: max(1, countdown), through: 1, by: -1) {
                     phase = .countdown(shot: shot, remaining: remaining)
+                    playSound(.tick)
                     try? await Task.sleep(nanoseconds: tick)
                     if Task.isCancelled { return }
                 }
                 phase = .capturing(shot: shot)
-                flashCounter += 1
+                playSound(.shutter)
+                if settings.flashEffect { flashCounter += 1 }
                 do {
                     let jpeg = try await camera.capture()
                     try await store.addPhoto(sessionId: id, index: shot, jpeg: jpeg)
@@ -155,11 +167,16 @@ final class BoothController {
                         : "Oops, let's try that one again!"
                 }
             }
-            // Brief pause so guests can see the shot and reset their pose.
-            if shot < totalShots - 1 { try? await Task.sleep(nanoseconds: tick) }
+            // Show the shot so guests can see it and reset their pose.
+            let pause = settings.postCapturePreviewSeconds
+            if pause > 0 {
+                phase = .showingShot(shot: shot)
+                try? await Task.sleep(nanoseconds: tick * UInt64(pause))
+                if Task.isCancelled { return }
+            }
         }
 
-        if settings.allowRetake {
+        if canRetake {
             enter(.review, timeout: settings.reviewTimeoutSeconds) { [weak self] in self?.accept() }
         } else {
             phase = .review
@@ -191,6 +208,16 @@ final class BoothController {
             }
             action()
         }
+    }
+
+    private enum Sound: SystemSoundID {
+        case tick = 1103      // keyboard tock
+        case shutter = 1108   // camera shutter
+    }
+
+    private func playSound(_ s: Sound) {
+        guard settings.countdownSounds else { return }
+        AudioServicesPlaySystemSound(s.rawValue)
     }
 
     static func guestMessage(for error: Error) -> String {
