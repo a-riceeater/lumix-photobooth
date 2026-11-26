@@ -174,9 +174,9 @@ extension Data {
         guard offset >= 0, offset + MemoryLayout<T>.size <= count else { return nil }
         var r = ByteReader(self, offset: offset)
         switch MemoryLayout<T>.size {
-        case 1: return (try? r.u8()).map(T.init)
-        case 2: return (try? r.u16()).map(T.init)
-        case 4: return (try? r.u32()).map(T.init)
+        case 1: return (try? r.u8()).map { T(truncatingIfNeeded: $0) }
+        case 2: return (try? r.u16()).map { T(truncatingIfNeeded: $0) }
+        case 4: return (try? r.u32()).map { T(truncatingIfNeeded: $0) }
         default: return (try? r.u64()).map { T(truncatingIfNeeded: $0) }
         }
     }
