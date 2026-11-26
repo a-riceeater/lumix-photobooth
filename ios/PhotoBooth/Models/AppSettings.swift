@@ -31,11 +31,22 @@ final class AppSettings {
     var eventName: String { didSet { save("eventName", eventName) } }
     var eventId: String { didSet { save("eventId", eventId) } }
     var photosPerSession: Int { didSet { save("photosPerSession", photosPerSession) } }
+    /// Countdown before the first photo of a session.
     var countdownSeconds: Int { didSet { save("countdownSeconds", countdownSeconds) } }
+    /// Countdown before each following photo.
+    var betweenPhotosCountdownSeconds: Int { didSet { save("betweenPhotosCountdownSeconds", betweenPhotosCountdownSeconds) } }
+    /// Seconds each photo is shown fullscreen right after it is taken (0 = only the thumbnail strip).
+    var postCapturePreviewSeconds: Int { didSet { save("postCapturePreviewSeconds", postCapturePreviewSeconds) } }
     var mirrorPreview: Bool { didSet { save("mirrorPreview", mirrorPreview) } }
     var showFramingGuides: Bool { didSet { save("showFramingGuides", showFramingGuides) } }
     var fillScreenPreview: Bool { didSet { save("fillScreenPreview", fillScreenPreview) } }
     var allowRetake: Bool { didSet { save("allowRetake", allowRetake) } }
+    /// Retakes allowed per session (0 = unlimited).
+    var maxRetakes: Int { didSet { save("maxRetakes", maxRetakes) } }
+    var countdownSounds: Bool { didSet { save("countdownSounds", countdownSounds) } }
+    var flashEffect: Bool { didSet { save("flashEffect", flashEffect) } }
+    /// Welcome screen subtitle; empty = "We'll take N photos — get ready to pose!".
+    var welcomeMessage: String { didSet { save("welcomeMessage", welcomeMessage) } }
     var offerEmail: Bool { didSet { save("offerEmail", offerEmail) } }
     var defaultDesignId: String { didSet { save("defaultDesignId", defaultDesignId) } }
     var resetTimeoutSeconds: Int { didSet { save("resetTimeoutSeconds", resetTimeoutSeconds) } }
@@ -63,10 +74,16 @@ final class AppSettings {
         eventId = str("eventId", "my-event")
         photosPerSession = int("photosPerSession", 3)
         countdownSeconds = int("countdownSeconds", 5)
+        betweenPhotosCountdownSeconds = int("betweenPhotosCountdownSeconds", int("countdownSeconds", 5))
+        postCapturePreviewSeconds = int("postCapturePreviewSeconds", 1)
         mirrorPreview = bool("mirrorPreview", true)
         showFramingGuides = bool("showFramingGuides", true)
         fillScreenPreview = bool("fillScreenPreview", false)
         allowRetake = bool("allowRetake", true)
+        maxRetakes = int("maxRetakes", 1)
+        countdownSounds = bool("countdownSounds", true)
+        flashEffect = bool("flashEffect", true)
+        welcomeMessage = str("welcomeMessage", "")
         offerEmail = bool("offerEmail", true)
         defaultDesignId = str("defaultDesignId", "")
         resetTimeoutSeconds = int("resetTimeoutSeconds", 60)
@@ -105,6 +122,35 @@ final class AppSettings {
             options: CameraOptions(captureTarget: captureTarget, forceJPEGFine: forceJPEGFine,
                                    autofocusBeforeCapture: autofocusBeforeCapture, liveviewWidth: UInt16(clamping: liveviewWidth)),
             mockFailureRate: mockFailureRate)
+    }
+
+    /// Cleans an operator-typed server address: trims spaces and trailing
+    /// slashes, adds http:// to bare hosts like "192.168.1.20:8080".
+    static func normalizeServerURL(_ raw: String) -> String {
+        var s = raw.trimmingCharacters(in: .whitespacesAndNewlines)
+        while s.hasSuffix("/") { s.removeLast() }
+        if s.hasSuffix("/api") { s.removeLast(4) }
+        if !s.isEmpty, !s.lowercased().hasPrefix("http://"), !s.lowercased().hasPrefix("https://") { s = "http://" + s }
+        return s
+    }
+
+    /// nil if valid, else a short operator-facing problem description.
+    static func serverURLProblem(_ s: String) -> String? {
+        guard !s.isEmpty else { return "Enter the server address, e.g. https://photos.example.com or http://192.168.1.20:8080" }
+        guard let u = URL(string: s), let scheme = u.scheme, ["http", "https"].contains(scheme), let host = u.host, !host.isEmpty else {
+            return "Not a valid address"
+        }
+        if scheme == "http", !Self.isLocalHost(host) {
+            return "iOS only allows plain http:// to local network addresses; use https:// for internet servers"
+        }
+        return nil
+    }
+
+    static func isLocalHost(_ host: String) -> Bool {
+        if host == "localhost" || host.hasSuffix(".local") || !host.contains(".") { return true }
+        let parts = host.split(separator: ".").compactMap { Int($0) }
+        guard parts.count == 4 else { return false }
+        return parts[0] == 10 || parts[0] == 127 || (parts[0] == 192 && parts[1] == 168) || (parts[0] == 172 && (16...31).contains(parts[1])) || (parts[0] == 169 && parts[1] == 254)
     }
 
     /// Event IDs must match the server's slug rule.
